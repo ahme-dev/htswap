@@ -1,16 +1,41 @@
-import { GlobalRegistrator } from "@happy-dom/global-registrator";
+import { GlobalRegistrator as HappyGlobal } from "@happy-dom/global-registrator";
 
-GlobalRegistrator.register();
+HappyGlobal.register();
 
-function htmlWrap(content: string): string {
-	return `<html><head></head><body>${content}</body></html>`;
+export function untabHTML(htmlString: string) {
+	const lines = htmlString.split("\n").filter((line) => line.trim());
+	if (lines.length === 0) return "";
+
+	const firstLineTabs = lines[0].match(/^\t*/)?.[0].length;
+
+	const result = lines.map((line) => {
+		if (line.startsWith("\t".repeat(firstLineTabs || 0))) {
+			return line.slice(firstLineTabs);
+		}
+		return line;
+	});
+
+	return result.join("\n");
 }
 
-export function setupRoutes(routes: Record<string, string>) {
+function htmlWrap(content: string): string {
+	return `<html><head></head><body>${untabHTML(content)}</body></html>`;
+}
+
+export function setupEnvironment(
+	page: string,
+	routes: Record<string, (params?: URLSearchParams) => string>,
+) {
+	document.body.innerHTML = htmlWrap(page);
+
 	const f = async (url: string) => {
-		const content = routes[url] ?? "";
+		const urlFirst = url.split("?").at(0);
+		const urlSecond = url.split("?").at(1);
+
+		const content = routes[urlFirst || "/"];
+		const params = new URLSearchParams(urlSecond);
 		return {
-			text: async () => htmlWrap(content),
+			text: async () => htmlWrap(content(params)),
 			ok: !!routes[url],
 			status: routes[url] ? 200 : 404,
 			headers: new Headers(),
@@ -19,8 +44,8 @@ export function setupRoutes(routes: Record<string, string>) {
 	globalThis.fetch = f as typeof fetch;
 }
 
-export function setupPage(content: string) {
-	document.body.innerHTML = htmlWrap(content);
+export function delay(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function click(selector: string) {
@@ -33,6 +58,19 @@ export function click(selector: string) {
 	);
 }
 
-export function delay(ms: number) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
+export function input(selector: string, text: string) {
+	const element = document.querySelector(`${selector}`) as HTMLInputElement;
+	if (!element) {
+		return expect(element != null);
+	}
+	element.value = "";
+	element.dispatchEvent(
+		new Event("focus", { bubbles: true }) as unknown as Event,
+	);
+	text.split("").forEach((_, index) => {
+		element.value = text.substring(0, index + 1);
+		element.dispatchEvent(
+			new Event("input", { bubbles: true }) as unknown as Event,
+		);
+	});
 }
