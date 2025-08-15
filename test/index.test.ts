@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { click, delay, setupPage, setupRoutes } from "./testing.test.ts";
+import { click, delay, setupPage, setupRoutes } from "./tools.ts";
 
 test("swapping should work.", async () => {
 	setupRoutes({
