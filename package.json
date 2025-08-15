@@ -4,8 +4,9 @@
 	"version": "0.1.0",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/ahme-dev/htswap.git"
+		"url": "git+https://github.com/ahme-dev/htswap.git"
 	},
+	"license": "MIT",
 	"publishConfig": {
 		"access": "public"
 	},
@@ -14,18 +15,18 @@
 		"dist-min",
 		"dist-compat"
 	],
-	"main": "./dist/index.cjs",
-	"types": "./dist/index.d.ts",
-	"module": "./dist/index.js",
+	"main": "./dist/htswap.cjs",
+	"types": "./dist/htswap.d.ts",
+	"module": "./dist/htswap.js",
 	"exports": {
 		".": {
 			"import": {
-				"types": "./dist/index.d.ts",
-				"default": "./dist/index.js"
+				"types": "./dist/htswap.d.ts",
+				"default": "./dist/htswap.js"
 			},
 			"require": {
-				"types": "./dist/index.d.ts",
-				"default": "./dist/index.cjs"
+				"types": "./dist/htswap.d.cts",
+				"default": "./dist/htswap.cjs"
 			}
 		}
 	},
@@ -38,8 +39,9 @@
 	"devDependencies": {
 		"@biomejs/biome": "2.0.6",
 		"@happy-dom/global-registrator": "^18.0.1",
+		"tsdown": "^0.14.1",
 		"typescript": "^5.8.3",
 		"vitest": "^3.2.4",
-		"tsdown": "^0.14.1"
+		"publint": "^0.3.12"
 	}
 }

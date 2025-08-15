@@ -54,56 +54,61 @@ var require_asyncToGenerator = /* @__PURE__ */ __commonJS({ "node_modules/.pnpm/
 }) });
 
 //#endregion
-//#region src/index.ts
+//#region src/htswap.ts
 var import_asyncToGenerator = /* @__PURE__ */ __toESM(require_asyncToGenerator(), 1);
-let lastTarget = "body";
-function htswapUpdate() {
-	return _htswapUpdate.apply(this, arguments);
+let htswapLastTarget = "body";
+function htswapReplace() {
+	return _htswapReplace.apply(this, arguments);
 }
-function _htswapUpdate() {
-	_htswapUpdate = (0, import_asyncToGenerator.default)(function* (href = location.href, target = "body", noHistory = false) {
+function _htswapReplace() {
+	_htswapReplace = (0, import_asyncToGenerator.default)(function* (href = location.href, target = "body", noHistory = false) {
+		const currentTargetEl = document.querySelector(target);
+		currentTargetEl === null || currentTargetEl === void 0 || currentTargetEl.setAttribute("aria-busy", "true");
 		const response = yield fetch(href, { headers: { "htswap-target": target } });
 		const newDoc = new DOMParser().parseFromString(yield response.text(), "text/html");
-		const newElement = newDoc.querySelector(target);
-		const currentElement = document.querySelector(target);
-		if (!newElement || !currentElement) {
-			console.error(`HTSWAP: Target "${target}" not found`);
-			return;
-		}
-		currentElement.outerHTML = newElement.outerHTML;
-		lastTarget = target;
+		const newTargetEl = newDoc.querySelector(target);
+		if (!newTargetEl || !currentTargetEl) return console.error(`HTSWAP: Target "${target}" not found`);
+		currentTargetEl.outerHTML = newTargetEl.outerHTML;
+		htswapLastTarget = target;
 		if (!noHistory) history.pushState({
 			target,
 			fromUrl: location.href
 		}, "", href);
-		htswapRegister();
 	});
-	return _htswapUpdate.apply(this, arguments);
+	return _htswapReplace.apply(this, arguments);
 }
-function htswapRegister() {
-	document.querySelectorAll("a[target]:not([data-registered])").forEach((el) => {
-		const anchor = el;
-		anchor.dataset.registered = "true";
-		anchor.onclick = (e) => {
+function htswapAssign() {
+	document.querySelectorAll("[target]:not([data-assigned])").forEach((el) => {
+		if (el.tagName === "A") {
+			const anchor = el;
+			anchor.dataset.assigned = "true";
+			anchor.onclick = (e) => {
+				e.preventDefault();
+				htswapReplace(anchor.href, anchor.getAttribute("target") || "body", anchor.hasAttribute("no-history"));
+			};
+		}
+		if (el.tagName === "FORM") el.onsubmit = (e) => {
 			e.preventDefault();
-			htswapUpdate(anchor.href, anchor.getAttribute("target") || "body", anchor.hasAttribute("no-history"));
+			const action = el.getAttribute("action") || location.pathname;
+			const params = new URLSearchParams(new FormData(el)).toString();
+			htswapReplace(action + (action.includes("?") ? "&" : "?") + params, el.getAttribute("target") || "");
 		};
 	});
 }
 function htswapInit() {
-	htswapRegister();
-	new MutationObserver(htswapRegister).observe(document.documentElement, {
+	htswapAssign();
+	new MutationObserver(htswapAssign).observe(document.documentElement, {
 		childList: true,
 		subtree: true
 	});
-	globalThis.addEventListener("popstate", (e) => {
+	window.addEventListener("popstate", (e) => {
 		var _e$state$fromUrl, _e$state, _e$state$target, _e$state2;
-		return htswapUpdate((_e$state$fromUrl = (_e$state = e.state) === null || _e$state === void 0 ? void 0 : _e$state.fromUrl) !== null && _e$state$fromUrl !== void 0 ? _e$state$fromUrl : "/", (_e$state$target = (_e$state2 = e.state) === null || _e$state2 === void 0 ? void 0 : _e$state2.target) !== null && _e$state$target !== void 0 ? _e$state$target : lastTarget, true);
+		return htswapReplace((_e$state$fromUrl = (_e$state = e.state) === null || _e$state === void 0 ? void 0 : _e$state.fromUrl) !== null && _e$state$fromUrl !== void 0 ? _e$state$fromUrl : "/", (_e$state$target = (_e$state2 = e.state) === null || _e$state2 === void 0 ? void 0 : _e$state2.target) !== null && _e$state$target !== void 0 ? _e$state$target : htswapLastTarget, true);
 	});
 }
 htswapInit();
 
 //#endregion
+exports.htswapAssign = htswapAssign;
 exports.htswapInit = htswapInit;
-exports.htswapRegister = htswapRegister;
-exports.htswapUpdate = htswapUpdate;
+exports.htswapReplace = htswapReplace;
