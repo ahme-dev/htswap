@@ -17,19 +17,17 @@ async function htswapReplace(href = location.href, target = "body", noHistory = 
 }
 function htswapAssign() {
 	document.querySelectorAll("[target]:not([data-assigned])").forEach((el) => {
-		if (el.tagName === "A") {
-			const anchor = el;
-			anchor.dataset.assigned = "true";
-			anchor.onclick = (e) => {
-				e.preventDefault();
-				htswapReplace(anchor.href, anchor.getAttribute("target") || "body", anchor.hasAttribute("no-history"));
-			};
-		}
-		if (el.tagName === "FORM") el.onsubmit = (e) => {
+		const targEl = el;
+		targEl.dataset.assigned = "true";
+		if (targEl instanceof HTMLAnchorElement) targEl.onclick = (e) => {
 			e.preventDefault();
-			const action = el.getAttribute("action") || location.pathname;
-			const params = new URLSearchParams(new FormData(el)).toString();
-			htswapReplace(action + (action.includes("?") ? "&" : "?") + params, el.getAttribute("target") || "");
+			htswapReplace(targEl.href, targEl.target || "body", targEl.hasAttribute("no-history"));
+		};
+		else if (targEl instanceof HTMLFormElement) targEl.onsubmit = (e) => {
+			e.preventDefault();
+			const action = targEl.action;
+			const params = new URLSearchParams(new FormData(targEl)).toString();
+			htswapReplace(action + (action.includes("?") ? "&" : "?") + params, targEl.target, targEl.hasAttribute("no-history"));
 		};
 	});
 }

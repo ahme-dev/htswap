@@ -30,29 +30,29 @@ export async function htswapReplace(
 
 export function htswapAssign() {
 	document.querySelectorAll("[target]:not([data-assigned])").forEach((el) => {
-		if (el.tagName === "A") {
-			const anchor = el as HTMLAnchorElement;
-			anchor.dataset.assigned = "true";
-			anchor.onclick = (e: MouseEvent) => {
+		const targEl = el as HTMLAnchorElement | HTMLFormElement;
+		targEl.dataset.assigned = "true";
+
+		if (targEl instanceof HTMLAnchorElement) {
+			targEl.onclick = (e: MouseEvent) => {
 				e.preventDefault();
 				htswapReplace(
-					anchor.href,
-					anchor.getAttribute("target") || "body",
-					anchor.hasAttribute("no-history"),
+					targEl.getAttribute("href") || location.href,
+					targEl.getAttribute("target") || "body",
+					targEl.hasAttribute("no-history"),
 				);
 			};
-		}
-		if (el.tagName === "FORM") {
-			(el as HTMLFormElement).onsubmit = (e: Event) => {
+		} else if (targEl instanceof HTMLFormElement) {
+			targEl.onsubmit = (e: Event) => {
 				e.preventDefault();
-				const action =
-					(el as HTMLFormElement).getAttribute("action") || location.pathname;
+				const action = targEl.getAttribute("action") || location.href;
 				const params = new URLSearchParams(
-					new FormData(el as HTMLFormElement) as unknown as string,
+					new FormData(targEl) as unknown as string,
 				).toString();
 				htswapReplace(
 					action + (action.includes("?") ? "&" : "?") + params,
-					(el as HTMLFormElement).getAttribute("target") || "",
+					targEl.getAttribute("target") || "body",
+					targEl.hasAttribute("no-history"),
 				);
 			};
 		}
