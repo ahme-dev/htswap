@@ -1,0 +1,16 @@
+diff --git a/lib/history/History.js b/lib/history/History.js
+index 3ce3cb30cc226162887aa31c3be9ee5e3ec82d26..33d994e105aa2bf2fea44bb56a9829db08048962 100644
+--- a/lib/history/History.js
++++ b/lib/history/History.js
+@@ -81,6 +81,11 @@ export default class History {
+         if (!this.#window.closed) {
+             this.#browserFrame?.goBack();
+         }
++        this.#window.dispatchEvent(
++            new PopStateEvent("popstate", {
++                state: history.state,
++            }),
++        );
+     }
+     /**
+      * Goes to the next page in session history.
