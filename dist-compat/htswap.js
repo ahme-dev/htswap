@@ -47,18 +47,17 @@ function _htswapReplace() {
 	return _htswapReplace.apply(this, arguments);
 }
 function htswapAssign() {
-	document.querySelectorAll("[target]:not([data-assigned])").forEach((el) => {
-		const targEl = el;
-		targEl.dataset.assigned = "true";
-		if (targEl instanceof HTMLAnchorElement) targEl.onclick = (e) => {
+	document.querySelectorAll("[target]:not([data-htswap-assigned])").forEach((el) => {
+		el.setAttribute("data-htswap-assigned", "true");
+		if (el instanceof HTMLAnchorElement) el.onclick = (e) => {
 			e.preventDefault();
-			htswapReplace(targEl.href, targEl.target || "body", targEl.hasAttribute("no-history"));
+			htswapReplace(el.getAttribute("href") || location.href, el.getAttribute("target") || "body", el.hasAttribute("no-history"));
 		};
-		else if (targEl instanceof HTMLFormElement) targEl.onsubmit = (e) => {
+		else if (el instanceof HTMLFormElement) el.onsubmit = (e) => {
 			e.preventDefault();
-			const action = targEl.action;
-			const params = new URLSearchParams(new FormData(targEl)).toString();
-			htswapReplace(action + (action.includes("?") ? "&" : "?") + params, targEl.target, targEl.hasAttribute("no-history"));
+			const action = el.getAttribute("action") || location.href;
+			const params = new URLSearchParams(new FormData(el)).toString();
+			htswapReplace(action + (action.includes("?") ? "&" : "?") + params, el.getAttribute("target") || "body", el.hasAttribute("no-history"));
 		};
 	});
 }
