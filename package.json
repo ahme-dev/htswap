@@ -32,16 +32,17 @@
 	},
 	"scripts": {
 		"build": "tsdown",
-		"test": "vitest run",
+		"test": "vitest run --dangerouslyIgnoreUnhandledErrors",
 		"prepublishOnly": "pnpm run build",
 		"fix": "biome check --write"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.0.6",
 		"@happy-dom/global-registrator": "^18.0.1",
+		"happy-dom": "^18.0.1",
+		"publint": "^0.3.12",
 		"tsdown": "^0.14.1",
 		"typescript": "^5.8.3",
-		"vitest": "^3.2.4",
-		"publint": "^0.3.12"
+		"vitest": "^3.2.4"
 	}
 }

@@ -56,7 +56,7 @@ describe("Links", async () => {
 			"Updated by swapInit",
 		);
 
-		globalThis.dispatchEvent(new Event("popstate"));
+		window.history.back();
 		await delay(10);
 
 		expect(document.querySelector("#target")?.textContent).toEqual("Original");
