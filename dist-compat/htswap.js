@@ -1,3 +1,4 @@
+// htswap-0.3.0-git+https://github.com/ahme-dev/htswap.git
 //#region node_modules/.pnpm/@oxc-project+runtime@0.81.0/node_modules/@oxc-project/runtime/src/helpers/esm/asyncToGenerator.js
 function asyncGeneratorStep(n, t, e, r, o, a, c) {
 	try {

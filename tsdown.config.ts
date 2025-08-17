@@ -1,4 +1,5 @@
 import { defineConfig } from "tsdown";
+import pkg from "./package.json" with { type: "json" };
 
 export default defineConfig([
 	{
@@ -9,6 +10,9 @@ export default defineConfig([
 		target: "es2015",
 		format: ["commonjs", "esm"],
 		dts: true,
+		banner: {
+			js: `// ${pkg.name}-${pkg.version}-${pkg.repository.url}`,
+		},
 	},
 	{
 		name: "Modern",
@@ -19,6 +23,9 @@ export default defineConfig([
 		format: ["commonjs", "esm", "es"],
 		dts: true,
 		publint: true,
+		banner: {
+			js: `// ${pkg.name}-${pkg.version}-${pkg.repository.url}`,
+		},
 	},
 	{
 		name: "Modern Minified",
@@ -29,5 +36,8 @@ export default defineConfig([
 		platform: "browser",
 		format: ["commonjs", "esm", "es"],
 		dts: true,
+		banner: {
+			js: `// ${pkg.name}-${pkg.version}-${pkg.repository.url}`,
+		},
 	},
 ]);
