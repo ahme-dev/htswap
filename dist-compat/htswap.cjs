@@ -56,12 +56,11 @@ var require_asyncToGenerator = /* @__PURE__ */ __commonJS({ "node_modules/.pnpm/
 //#endregion
 //#region src/htswap.ts
 var import_asyncToGenerator = /* @__PURE__ */ __toESM(require_asyncToGenerator(), 1);
-let htswapLastTarget = "body";
 function htswapReplace() {
 	return _htswapReplace.apply(this, arguments);
 }
 function _htswapReplace() {
-	_htswapReplace = (0, import_asyncToGenerator.default)(function* (href = location.href, target = "body", noHistory = false) {
+	_htswapReplace = (0, import_asyncToGenerator.default)(function* (href = location.href, target = "body", historyMode = "push") {
 		const currentTargetEl = document.querySelector(target);
 		currentTargetEl === null || currentTargetEl === void 0 || currentTargetEl.setAttribute("aria-busy", "true");
 		const response = yield fetch(href, { headers: { "htswap-target": target } });
@@ -69,8 +68,11 @@ function _htswapReplace() {
 		const newTargetEl = newDoc.querySelector(target);
 		if (!newTargetEl || !currentTargetEl) return console.error(`HTSWAP: Target "${target}" not found`);
 		currentTargetEl.outerHTML = newTargetEl.outerHTML;
-		htswapLastTarget = target;
-		if (!noHistory) history.pushState({
+		if (historyMode === "push") history.pushState({
+			target,
+			fromUrl: location.href
+		}, "", href);
+		else if (historyMode === "replace") history.replaceState({
 			target,
 			fromUrl: location.href
 		}, "", href);
@@ -78,17 +80,17 @@ function _htswapReplace() {
 	return _htswapReplace.apply(this, arguments);
 }
 function htswapAssign() {
-	document.querySelectorAll("[target]:not([data-htswap-assigned])").forEach((el) => {
-		el.setAttribute("data-htswap-assigned", "true");
+	document.querySelectorAll("[target]:not([data-htswap-locked]):not([target^=\"_\"])").forEach((el) => {
+		el.setAttribute("data-htswap-locked", "true");
 		if (el instanceof HTMLAnchorElement) el.onclick = (e) => {
 			e.preventDefault();
-			htswapReplace(el.getAttribute("href") || location.href, el.getAttribute("target") || "body", el.hasAttribute("no-history"));
+			htswapReplace(el.getAttribute("href") || void 0, el.getAttribute("target") || void 0, el.getAttribute("data-htswap-history") || void 0);
 		};
 		else if (el instanceof HTMLFormElement) el.onsubmit = (e) => {
 			e.preventDefault();
 			const action = el.getAttribute("action") || location.href;
 			const params = new URLSearchParams(new FormData(el)).toString();
-			htswapReplace(action + (action.includes("?") ? "&" : "?") + params, el.getAttribute("target") || "body", el.hasAttribute("no-history"));
+			htswapReplace(action + (action.includes("?") ? "&" : "?") + params, el.getAttribute("target") || void 0, el.getAttribute("data-htswap-history") || void 0);
 		};
 	});
 }
@@ -99,8 +101,8 @@ function htswapInit() {
 		subtree: true
 	});
 	window.addEventListener("popstate", (e) => {
-		var _e$state$fromUrl, _e$state, _e$state$target, _e$state2;
-		return htswapReplace((_e$state$fromUrl = (_e$state = e.state) === null || _e$state === void 0 ? void 0 : _e$state.fromUrl) !== null && _e$state$fromUrl !== void 0 ? _e$state$fromUrl : "/", (_e$state$target = (_e$state2 = e.state) === null || _e$state2 === void 0 ? void 0 : _e$state2.target) !== null && _e$state$target !== void 0 ? _e$state$target : htswapLastTarget, true);
+		var _e$state$target;
+		return htswapReplace(location.href, (_e$state$target = e.state.target) !== null && _e$state$target !== void 0 ? _e$state$target : "body", "none");
 	});
 }
 htswapInit();

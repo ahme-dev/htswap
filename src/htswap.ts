@@ -1,9 +1,7 @@
-let htswapLastTarget = "body";
-
 export async function htswapReplace(
 	href: string = location.href,
 	target: string = "body",
-	noHistory: boolean = false,
+	historyMode: "replace" | "push" | "none" | string = "push",
 ) {
 	const currentTargetEl = document.querySelector(target);
 	currentTargetEl?.setAttribute("aria-busy", "true");
@@ -22,24 +20,25 @@ export async function htswapReplace(
 	}
 
 	currentTargetEl.outerHTML = newTargetEl.outerHTML;
-	htswapLastTarget = target;
-	if (!noHistory) {
+	if (historyMode === "push") {
 		history.pushState({ target, fromUrl: location.href }, "", href);
+	} else if (historyMode === "replace") {
+		history.replaceState({ target, fromUrl: location.href }, "", href);
 	}
 }
 
 export function htswapAssign() {
 	document
-		.querySelectorAll('[target]:not([data-htswap-assigned]):not([target^="_"])')
+		.querySelectorAll('[target]:not([data-htswap-locked]):not([target^="_"])')
 		.forEach((el) => {
-			el.setAttribute("data-htswap-assigned", "true");
+			el.setAttribute("data-htswap-locked", "true");
 			if (el instanceof HTMLAnchorElement) {
 				el.onclick = (e: MouseEvent) => {
 					e.preventDefault();
 					htswapReplace(
-						el.getAttribute("href") || location.href,
-						el.getAttribute("target") || "body",
-						el.hasAttribute("no-history"),
+						el.getAttribute("href") || undefined,
+						el.getAttribute("target") || undefined,
+						el.getAttribute("data-htswap-history") || undefined,
 					);
 				};
 			} else if (el instanceof HTMLFormElement) {
@@ -51,8 +50,8 @@ export function htswapAssign() {
 					).toString();
 					htswapReplace(
 						action + (action.includes("?") ? "&" : "?") + params,
-						el.getAttribute("target") || "body",
-						el.hasAttribute("no-history"),
+						el.getAttribute("target") || undefined,
+						el.getAttribute("data-htswap-history") || undefined,
 					);
 				};
 			}
@@ -66,11 +65,7 @@ export function htswapInit() {
 		subtree: true,
 	});
 	window.addEventListener("popstate", (e: PopStateEvent) =>
-		htswapReplace(
-			e.state?.fromUrl ?? "/",
-			e.state?.target ?? htswapLastTarget,
-			true,
-		),
+		htswapReplace(location.href, e.state.target ?? "body", "none"),
 	);
 }
 

@@ -1,7 +1,6 @@
 
 //#region src/htswap.ts
-let htswapLastTarget = "body";
-async function htswapReplace(href = location.href, target = "body", noHistory = false) {
+async function htswapReplace(href = location.href, target = "body", historyMode = "push") {
 	const currentTargetEl = document.querySelector(target);
 	currentTargetEl?.setAttribute("aria-busy", "true");
 	const response = await fetch(href, { headers: { "htswap-target": target } });
@@ -9,24 +8,27 @@ async function htswapReplace(href = location.href, target = "body", noHistory = 
 	const newTargetEl = newDoc.querySelector(target);
 	if (!newTargetEl || !currentTargetEl) return console.error(`HTSWAP: Target "${target}" not found`);
 	currentTargetEl.outerHTML = newTargetEl.outerHTML;
-	htswapLastTarget = target;
-	if (!noHistory) history.pushState({
+	if (historyMode === "push") history.pushState({
+		target,
+		fromUrl: location.href
+	}, "", href);
+	else if (historyMode === "replace") history.replaceState({
 		target,
 		fromUrl: location.href
 	}, "", href);
 }
 function htswapAssign() {
-	document.querySelectorAll("[target]:not([data-htswap-assigned])").forEach((el) => {
-		el.setAttribute("data-htswap-assigned", "true");
+	document.querySelectorAll("[target]:not([data-htswap-locked]):not([target^=\"_\"])").forEach((el) => {
+		el.setAttribute("data-htswap-locked", "true");
 		if (el instanceof HTMLAnchorElement) el.onclick = (e) => {
 			e.preventDefault();
-			htswapReplace(el.getAttribute("href") || location.href, el.getAttribute("target") || "body", el.hasAttribute("no-history"));
+			htswapReplace(el.getAttribute("href") || void 0, el.getAttribute("target") || void 0, el.getAttribute("data-htswap-history") || void 0);
 		};
 		else if (el instanceof HTMLFormElement) el.onsubmit = (e) => {
 			e.preventDefault();
 			const action = el.getAttribute("action") || location.href;
 			const params = new URLSearchParams(new FormData(el)).toString();
-			htswapReplace(action + (action.includes("?") ? "&" : "?") + params, el.getAttribute("target") || "body", el.hasAttribute("no-history"));
+			htswapReplace(action + (action.includes("?") ? "&" : "?") + params, el.getAttribute("target") || void 0, el.getAttribute("data-htswap-history") || void 0);
 		};
 	});
 }
@@ -36,7 +38,7 @@ function htswapInit() {
 		childList: true,
 		subtree: true
 	});
-	window.addEventListener("popstate", (e) => htswapReplace(e.state?.fromUrl ?? "/", e.state?.target ?? htswapLastTarget, true));
+	window.addEventListener("popstate", (e) => htswapReplace(location.href, e.state.target ?? "body", "none"));
 }
 htswapInit();
 
