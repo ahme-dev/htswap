@@ -1,8 +1,11 @@
 # 🔄 htswap
 
-**Minimal, lightweight tool for seamless AJAX-style UI content swapping.** By adding `htswap` and applying the `target` attribute on your links and forms, you get the speed of client-side-rendering in your server-side-rendered/static sites.
+**Minimal, lightweight script for seamless AJAX-style UI content swapping.** By adding `htswap` and applying the `target` attribute on your links and forms, you get the speed of client-side-rendering in your server-side-rendered/static sites.
 
 Based on **Swap.js**, and inspired by **HTMZ**, **HTMX**, **Alpine-Ajax**, among others. A modern, smaller, more semantic alternative.
+
+> [!WARNING]  
+> Expect breaking changes until v1.
 
 ## ✨ Features
 
@@ -93,4 +96,22 @@ Forms add their inputs as URL params when fetching, allowing the server to filte
 
 **For example**, if a form with action set on `/products` has an input named `product-name` with value `pc`, when submitted it will send its request as `/products?product-name=pc`.
 
-Forms also support **browser history**.
+### 📕 History
+
+Several modes of interacting with history are support, with `push` being the default.
+
+- `push`: changes the URL but the user can navigate back to the previous URL. 
+- `replace`: changes the URL but the user can't navigate back. 
+- `none`: doesn't change the URL.
+
+```html
+<a data-htswap-history="replace" href="/search" target="#list">Search</a>
+```
+
+### 🔒 Locking
+
+If you have existing elements with `target` you can opt them out of swapping, using `data-htswap-locked`.
+
+```html
+<a data-htswap-locked href="/content" target="anIframe">Iframe</a>
+```
