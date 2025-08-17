@@ -30,7 +30,7 @@ export async function htswapReplace(
 
 export function htswapAssign() {
 	document
-		.querySelectorAll("[target]:not([data-htswap-assigned])")
+		.querySelectorAll('[target]:not([data-htswap-assigned]):not([target^="_"])')
 		.forEach((el) => {
 			el.setAttribute("data-htswap-assigned", "true");
 			if (el instanceof HTMLAnchorElement) {
