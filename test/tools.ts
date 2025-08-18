@@ -23,7 +23,7 @@ function htmlWrap(content: string): string {
 
 export function setupEnvironment(
 	page: string,
-	routes: Record<string, (params?: URLSearchParams) => string>,
+	routes: Record<string, (params?: URLSearchParams | FormData) => string>,
 ): void {
 	document.body.innerHTML = htmlWrap(page);
 	window.history.replaceState({}, "", "/");

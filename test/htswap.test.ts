@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { click, delay, input, setupEnvironment, untabHTML } from "./tools.ts";
 
 describe("Links", async () => {
-	test("Should work normally.", async () => {
+	test("Should swap on click", async () => {
 		setupEnvironment(
 			`
 			<div>
@@ -31,7 +31,7 @@ describe("Links", async () => {
 		);
 	});
 
-	test("Should work with back button.", async () => {
+	test("Should swap with back button", async () => {
 		setupEnvironment(
 			`
 			<div id="page">
@@ -80,7 +80,7 @@ describe("Links", async () => {
 });
 
 describe("Forms", async () => {
-	test("Should work normally.", async () => {
+	test("Should swap on submit with GET", async () => {
 		setupEnvironment(
 			`
 			<div>
@@ -98,7 +98,9 @@ describe("Forms", async () => {
 			{
 				"/search": (params) => {
 					const elements = ["P1", "P2", "P3"]
-						.filter((v) => v.includes(params?.get("title") || ""))
+						.filter((v) =>
+							v.includes((params as URLSearchParams)?.get("title") || ""),
+						)
 						.map((v) => `<li>${v}</li>`);
 
 					return untabHTML(`
@@ -135,10 +137,62 @@ describe("Forms", async () => {
 		input("#title", "P3");
 		await delay(10);
 		click("#do-search");
-		await delay(100);
+		await delay(10);
 
 		expect(
 			untabHTML(document.querySelector("#list")?.innerHTML.toString() || ""),
 		).toEqual(untabHTML(`<li>P3</li>`));
+	});
+
+	test("Should swap on submit with POST", async () => {
+		setupEnvironment(
+			`
+			<div>
+				<form action="/signup" method="POST" data-htswap-target="#response">
+					<input type="text" id="username" name="username" />
+					<input type="email" id="email" name="email" />
+					<input type="password" id="password" name="password" />
+					<button id="signup-btn" type="submit">Sign Up</button>
+				</form>
+				<div id="response"></div>
+			</div>
+			`,
+			{
+				"/signup": (formData) => {
+					const fd = formData as FormData;
+					const username: string = fd.get("username") as string;
+					const email: string = fd.get("email") as string;
+
+					return untabHTML(`
+					<div id="response">
+						<p>Welcome, ${username}!</p>
+						<p>Email: ${email}</p>
+					</div>
+				`);
+				},
+			},
+		);
+
+		const { htswapInit } = await import("../src/htswap.ts");
+		htswapInit();
+
+		input("#username", "testuser");
+		input("#email", "test@example.com");
+		input("#password", "secretpassword");
+		await delay(10);
+
+		click("#signup-btn");
+		await delay(10);
+
+		expect(
+			untabHTML(
+				document.querySelector("#response")?.innerHTML.toString() || "",
+			),
+		).toEqual(
+			untabHTML(`
+			<p>Welcome, testuser!</p>
+			<p>Email: test@example.com</p>
+		`),
+		);
 	});
 });
