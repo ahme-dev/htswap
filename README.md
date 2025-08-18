@@ -106,7 +106,7 @@ Forms add their inputs as URL params when fetching, allowing the server to filte
 
 ### 📕 History
 
-Several modes of interacting with history are support, with `push` being the default.
+Several modes of interacting with history are supported, with `push` being the default.
 
 - `push`: changes the URL but the user can navigate back to the previous URL. 
 - `replace`: changes the URL but the user can't navigate back. 
