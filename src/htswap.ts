@@ -1,13 +1,16 @@
 export async function htswapReplace(
-	href: string = location.href,
 	target: string = "body",
 	historyMode: "replace" | "push" | "none" | string = "push",
+	url: string = location.href,
+	body?: string,
 ) {
 	const currentTargetEl = document.querySelector(target);
 	currentTargetEl?.setAttribute("aria-busy", "true");
 
-	const response = await fetch(href, {
+	const response = await fetch(url, {
 		headers: { "htswap-target": target },
+		method: body ? "POST" : "GET",
+		body,
 	});
 	const newDoc = new DOMParser().parseFromString(
 		await response.text(),
@@ -21,9 +24,9 @@ export async function htswapReplace(
 
 	currentTargetEl.outerHTML = newTargetEl.outerHTML;
 	if (historyMode === "push") {
-		history.pushState({ target }, "", href);
+		history.pushState({ target }, "", url);
 	} else if (historyMode === "replace") {
-		history.replaceState({ target }, "", href);
+		history.replaceState({ target }, "", url);
 	}
 }
 
@@ -38,23 +41,35 @@ export function htswapAssign() {
 				el.onclick = (e: MouseEvent) => {
 					e.preventDefault();
 					htswapReplace(
-						el.getAttribute("href") || undefined,
 						el.getAttribute("data-htswap-target") || undefined,
 						el.getAttribute("data-htswap-history") || undefined,
+						el.getAttribute("href") || undefined,
 					);
 				};
 			} else if (el instanceof HTMLFormElement) {
 				el.onsubmit = (e: Event) => {
 					e.preventDefault();
-					const action = el.getAttribute("action") || location.href;
-					const params = new URLSearchParams(
-						new FormData(el) as unknown as string,
-					).toString();
-					htswapReplace(
-						action + (action.includes("?") ? "&" : "?") + params,
-						el.getAttribute("data-htswap-target") || undefined,
-						el.getAttribute("data-htswap-history") || undefined,
-					);
+					const action = el.action || location.href;
+
+					if (el.method === "POST") {
+						const body = JSON.stringify(Object.fromEntries(new FormData(el)));
+						htswapReplace(
+							el.getAttribute("data-htswap-target") || undefined,
+							el.getAttribute("data-htswap-history") || undefined,
+							action,
+							body,
+						);
+					} else {
+						const params = new URLSearchParams(
+							new FormData(el) as unknown as string,
+						);
+						const url = action + (action.includes("?") ? "&" : "?") + params;
+						htswapReplace(
+							el.getAttribute("data-htswap-target") || undefined,
+							el.getAttribute("data-htswap-history") || undefined,
+							url,
+						);
+					}
 				};
 			}
 		});
@@ -67,7 +82,7 @@ export function htswapInit() {
 		subtree: true,
 	});
 	window.addEventListener("popstate", (e) =>
-		htswapReplace(undefined, e.state?.target, "none"),
+		htswapReplace(e.state?.target, "none"),
 	);
 }
 

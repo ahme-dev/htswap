@@ -11,7 +11,7 @@ export default defineConfig([
 		format: ["commonjs", "esm"],
 		dts: true,
 		banner: {
-			js: `// ${pkg.name}-${(pkg as any).version}-${pkg.repository.url}`,
+			js: `// ${pkg.name}-${(pkg as any).version || "dev"}-${pkg.repository.url}`,
 		},
 	},
 	{
@@ -23,7 +23,7 @@ export default defineConfig([
 		format: ["commonjs", "esm", "es"],
 		dts: true,
 		banner: {
-			js: `// ${pkg.name}-${(pkg as any).version}-${pkg.repository.url}`,
+			js: `// ${pkg.name}-${(pkg as any).version || "dev"}-${pkg.repository.url}`,
 		},
 	},
 	{
@@ -36,7 +36,7 @@ export default defineConfig([
 		format: ["commonjs", "esm", "es"],
 		dts: true,
 		banner: {
-			js: `// ${pkg.name}-${(pkg as any).version}-${pkg.repository.url}`,
+			js: `// ${pkg.name}-${(pkg as any).version || "dev"}-${pkg.repository.url}`,
 		},
 	},
 	{
@@ -49,7 +49,7 @@ export default defineConfig([
 		format: ["commonjs", "esm"],
 		dts: true,
 		banner: {
-			js: `// ${pkg.name}-${(pkg as any).version}-${pkg.repository.url}`,
+			js: `// ${pkg.name}-${(pkg as any).version || "dev"}-${pkg.repository.url}`,
 		},
 	},
 ]);
