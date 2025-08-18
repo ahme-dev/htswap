@@ -2,7 +2,7 @@
 
 //#region src/htswap.ts
 async function htswapReplace(href = location.href, target = "body", historyMode = "push") {
-	const currentTargetEl = window.document.querySelector(target);
+	const currentTargetEl = document.querySelector(target);
 	currentTargetEl?.setAttribute("aria-busy", "true");
 	const response = await fetch(href, { headers: { "htswap-target": target } });
 	const newDoc = new DOMParser().parseFromString(await response.text(), "text/html");
@@ -13,7 +13,7 @@ async function htswapReplace(href = location.href, target = "body", historyMode 
 	else if (historyMode === "replace") history.replaceState({ target }, "", href);
 }
 function htswapAssign() {
-	window.document.querySelectorAll("[target]:not([data-htswap-locked]):not([target^=\"_\"])").forEach((el) => {
+	document.querySelectorAll("[target]:not([data-htswap-locked]):not([target^=\"_\"])").forEach((el) => {
 		el.setAttribute("data-htswap-locked", "true");
 		if (el instanceof HTMLAnchorElement) el.onclick = (e) => {
 			e.preventDefault();
@@ -29,7 +29,7 @@ function htswapAssign() {
 }
 function htswapInit() {
 	htswapAssign();
-	new MutationObserver(htswapAssign).observe(window.document.documentElement, {
+	new MutationObserver(htswapAssign).observe(document.documentElement, {
 		childList: true,
 		subtree: true
 	});

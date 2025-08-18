@@ -31,7 +31,7 @@ function htswapReplace() {
 }
 function _htswapReplace() {
 	_htswapReplace = _asyncToGenerator(function* (href = location.href, target = "body", historyMode = "push") {
-		const currentTargetEl = window.document.querySelector(target);
+		const currentTargetEl = document.querySelector(target);
 		currentTargetEl === null || currentTargetEl === void 0 || currentTargetEl.setAttribute("aria-busy", "true");
 		const response = yield fetch(href, { headers: { "htswap-target": target } });
 		const newDoc = new DOMParser().parseFromString(yield response.text(), "text/html");
@@ -44,7 +44,7 @@ function _htswapReplace() {
 	return _htswapReplace.apply(this, arguments);
 }
 function htswapAssign() {
-	window.document.querySelectorAll("[target]:not([data-htswap-locked]):not([target^=\"_\"])").forEach((el) => {
+	document.querySelectorAll("[target]:not([data-htswap-locked]):not([target^=\"_\"])").forEach((el) => {
 		el.setAttribute("data-htswap-locked", "true");
 		if (el instanceof HTMLAnchorElement) el.onclick = (e) => {
 			e.preventDefault();
@@ -60,7 +60,7 @@ function htswapAssign() {
 }
 function htswapInit() {
 	htswapAssign();
-	new MutationObserver(htswapAssign).observe(window.document.documentElement, {
+	new MutationObserver(htswapAssign).observe(document.documentElement, {
 		childList: true,
 		subtree: true
 	});
