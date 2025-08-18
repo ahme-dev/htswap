@@ -26,8 +26,8 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 
 //#endregion
 
-//#region node_modules/.pnpm/@oxc-project+runtime@0.81.0/node_modules/@oxc-project/runtime/src/helpers/asyncToGenerator.js
-var require_asyncToGenerator = /* @__PURE__ */ __commonJS({ "node_modules/.pnpm/@oxc-project+runtime@0.81.0/node_modules/@oxc-project/runtime/src/helpers/asyncToGenerator.js": ((exports, module) => {
+//#region node_modules/.pnpm/@oxc-project+runtime@0.82.2/node_modules/@oxc-project/runtime/src/helpers/asyncToGenerator.js
+var require_asyncToGenerator = /* @__PURE__ */ __commonJS({ "node_modules/.pnpm/@oxc-project+runtime@0.82.2/node_modules/@oxc-project/runtime/src/helpers/asyncToGenerator.js": ((exports, module) => {
 	function asyncGeneratorStep(n, t, e, r, o, a, c) {
 		try {
 			var i = n[a](c), u = i.value;
@@ -62,26 +62,20 @@ function htswapReplace() {
 }
 function _htswapReplace() {
 	_htswapReplace = (0, import_asyncToGenerator.default)(function* (href = location.href, target = "body", historyMode = "push") {
-		const currentTargetEl = document.querySelector(target);
+		const currentTargetEl = window.document.querySelector(target);
 		currentTargetEl === null || currentTargetEl === void 0 || currentTargetEl.setAttribute("aria-busy", "true");
 		const response = yield fetch(href, { headers: { "htswap-target": target } });
 		const newDoc = new DOMParser().parseFromString(yield response.text(), "text/html");
 		const newTargetEl = newDoc.querySelector(target);
 		if (!newTargetEl || !currentTargetEl) return console.error(`HTSWAP: Target "${target}" not found`);
 		currentTargetEl.outerHTML = newTargetEl.outerHTML;
-		if (historyMode === "push") history.pushState({
-			target,
-			fromUrl: location.href
-		}, "", href);
-		else if (historyMode === "replace") history.replaceState({
-			target,
-			fromUrl: location.href
-		}, "", href);
+		if (historyMode === "push") history.pushState({ target }, "", href);
+		else if (historyMode === "replace") history.replaceState({ target }, "", href);
 	});
 	return _htswapReplace.apply(this, arguments);
 }
 function htswapAssign() {
-	document.querySelectorAll("[target]:not([data-htswap-locked]):not([target^=\"_\"])").forEach((el) => {
+	window.document.querySelectorAll("[target]:not([data-htswap-locked]):not([target^=\"_\"])").forEach((el) => {
 		el.setAttribute("data-htswap-locked", "true");
 		if (el instanceof HTMLAnchorElement) el.onclick = (e) => {
 			e.preventDefault();
@@ -97,13 +91,13 @@ function htswapAssign() {
 }
 function htswapInit() {
 	htswapAssign();
-	new MutationObserver(htswapAssign).observe(document.documentElement, {
+	new MutationObserver(htswapAssign).observe(window.document.documentElement, {
 		childList: true,
 		subtree: true
 	});
 	window.addEventListener("popstate", (e) => {
-		var _e$state$target;
-		return htswapReplace(location.href, (_e$state$target = e.state.target) !== null && _e$state$target !== void 0 ? _e$state$target : "body", "none");
+		var _e$state;
+		return htswapReplace(void 0, (_e$state = e.state) === null || _e$state === void 0 ? void 0 : _e$state.target, "none");
 	});
 }
 htswapInit();

@@ -2,24 +2,18 @@
 
 //#region src/htswap.ts
 async function htswapReplace(href = location.href, target = "body", historyMode = "push") {
-	const currentTargetEl = document.querySelector(target);
+	const currentTargetEl = window.document.querySelector(target);
 	currentTargetEl?.setAttribute("aria-busy", "true");
 	const response = await fetch(href, { headers: { "htswap-target": target } });
 	const newDoc = new DOMParser().parseFromString(await response.text(), "text/html");
 	const newTargetEl = newDoc.querySelector(target);
 	if (!newTargetEl || !currentTargetEl) return console.error(`HTSWAP: Target "${target}" not found`);
 	currentTargetEl.outerHTML = newTargetEl.outerHTML;
-	if (historyMode === "push") history.pushState({
-		target,
-		fromUrl: location.href
-	}, "", href);
-	else if (historyMode === "replace") history.replaceState({
-		target,
-		fromUrl: location.href
-	}, "", href);
+	if (historyMode === "push") history.pushState({ target }, "", href);
+	else if (historyMode === "replace") history.replaceState({ target }, "", href);
 }
 function htswapAssign() {
-	document.querySelectorAll("[target]:not([data-htswap-locked]):not([target^=\"_\"])").forEach((el) => {
+	window.document.querySelectorAll("[target]:not([data-htswap-locked]):not([target^=\"_\"])").forEach((el) => {
 		el.setAttribute("data-htswap-locked", "true");
 		if (el instanceof HTMLAnchorElement) el.onclick = (e) => {
 			e.preventDefault();
@@ -35,11 +29,11 @@ function htswapAssign() {
 }
 function htswapInit() {
 	htswapAssign();
-	new MutationObserver(htswapAssign).observe(document.documentElement, {
+	new MutationObserver(htswapAssign).observe(window.document.documentElement, {
 		childList: true,
 		subtree: true
 	});
-	window.addEventListener("popstate", (e) => htswapReplace(location.href, e.state.target ?? "body", "none"));
+	window.addEventListener("popstate", (e) => htswapReplace(void 0, e.state?.target, "none"));
 }
 htswapInit();
 

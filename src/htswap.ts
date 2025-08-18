@@ -21,9 +21,9 @@ export async function htswapReplace(
 
 	currentTargetEl.outerHTML = newTargetEl.outerHTML;
 	if (historyMode === "push") {
-		history.pushState({ target, fromUrl: location.href }, "", href);
+		history.pushState({ target }, "", href);
 	} else if (historyMode === "replace") {
-		history.replaceState({ target, fromUrl: location.href }, "", href);
+		history.replaceState({ target }, "", href);
 	}
 }
 
@@ -64,8 +64,8 @@ export function htswapInit() {
 		childList: true,
 		subtree: true,
 	});
-	window.addEventListener("popstate", (e: PopStateEvent) =>
-		htswapReplace(location.href, e.state.target ?? "body", "none"),
+	window.addEventListener("popstate", (e) =>
+		htswapReplace(undefined, e.state?.target, "none"),
 	);
 }
 
