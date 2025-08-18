@@ -25,11 +25,9 @@ There are several build/distribution variants:
 - `dist`: modern and default (es2020)
 - `dist-compat`: compatible with older browsers (es2015)
 - `dist-min`: same as `dist` but minified
-- `dist-min-compat`: same as `dist-compat` but minified ()
+- `dist-min-compat`: same as `dist-compat` but minified
 
 Any of the variants can be installed through the following methods:
-
-📂 Copy the `htswap.js` or `htswap.cjs` file into your codebase from any of the `dist` directories.
 
 🌐 Import from a CDN, changing the `dist` part to any of the variants:
 
@@ -37,11 +35,9 @@ Any of the variants can be installed through the following methods:
 <script type="module" src="https://cdn.jsdelivr.net/npm/htswap@latest/dist/htswap.js"></script>
 ```
 
-📋 Install with a package manager and import any of the variants on the client side:
+📂 Download a copy of the script file into your codebase from [any of the dist directories here](https://cdn.jsdelivr.net/npm/htswap/).
 
-```
-pnpm i htswap
-```
+📋 Install with a package manager and import any of the variants on the client side: `pnpm i htswap`
 
 ## 🚀 Usage
 
