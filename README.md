@@ -45,15 +45,7 @@ pnpm i htswap
 
 ## 🚀 Usage
 
-### ⚙️ Setup
-
-The script can be imported directly in the HTML:
-
-```html
-<head>
-	<script type="module" src="/htswap.js"></script>
-</head>
-```
+After making sure `htswap` is imported, you can utilize it as detailed below.
 
 ### 🔗 Links
 
