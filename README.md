@@ -1,3 +1,6 @@
+[![NPM Version](https://img.shields.io/npm/v/htswap?style=for-the-badge&color=red)](https://www.npmjs.com/package/htswap)
+
+
 # 🔄 htswap
 
 **Minimal, lightweight script for seamless AJAX-style UI content swapping.** By adding `htswap` and applying the `target` attribute on your links and forms, you get the speed of client-side-rendering in your server-side-rendered/static sites.
@@ -16,16 +19,28 @@ Based on **Swap.js**, and inspired by **HTMZ**, **HTMX**, **Alpine-Ajax**, among
 
 ## 📦 Installation
 
-There are several options:
+There are several build/distribution variants: 
 
-📂 Copy the `htswap` file into your codebase from any of the `dist` directories:
-  - `dist` is default
-  - `dist-compat` supports older browsers
-  - `dist-min` is minified
+- `dist`: modern and default (es2020)
+- `dist-compat`: compatible with older browsers (es2015)
+- `dist-min`: same as `dist` but minified
+- `dist-min-compat`: same as `dist-compat` but minified ()
 
-🌐 Import from a CDN with `?`
+Any of the variants can be installed through the following methods:
 
-📋 Install with a package manager: `pnpm i htswap`
+📂 Copy the `htswap.js` or `htswap.cjs` file into your codebase from any of the `dist` directories.
+
+🌐 Import from a CDN, changing the `dist` part to any of the variants:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/htswap@0.3.0/dist/htswap.js"></script>
+```
+
+📋 Install with a package manager and import any of the variants on the client side:
+
+```
+pnpm i htswap
+```
 
 ## 🚀 Usage
 

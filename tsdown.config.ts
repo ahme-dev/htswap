@@ -40,4 +40,17 @@ export default defineConfig([
 			js: `// ${pkg.name}-${pkg.version}-${pkg.repository.url}`,
 		},
 	},
+	{
+		name: "Compatiblity Minified",
+		entry: "./src/htswap.ts",
+		outDir: "dist-min-compat",
+		minify: true,
+		platform: "browser",
+		target: "es2015",
+		format: ["commonjs", "esm"],
+		dts: true,
+		banner: {
+			js: `// ${pkg.name}-${pkg.version}-${pkg.repository.url}`,
+		},
+	},
 ]);
