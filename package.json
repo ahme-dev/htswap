@@ -38,8 +38,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.0.6",
-		"@happy-dom/global-registrator": "^18.0.1",
-		"happy-dom": "^18.0.1",
+		"jsdom": "^26.1.0",
 		"publint": "^0.3.12",
 		"tsdown": "^0.14.1",
 		"typescript": "^5.8.3",

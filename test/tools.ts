@@ -1,6 +1,5 @@
-import { GlobalRegistrator as HappyGlobal } from "@happy-dom/global-registrator";
-
-HappyGlobal.register();
+// @vitest-environment jsdom
+import { expect } from "vitest";
 
 export function untabHTML(htmlString: string) {
 	const lines = htmlString.split("\n").filter((line) => line.trim());
@@ -25,22 +24,49 @@ function htmlWrap(content: string): string {
 export function setupEnvironment(
 	page: string,
 	routes: Record<string, (params?: URLSearchParams) => string>,
-) {
+): void {
 	document.body.innerHTML = htmlWrap(page);
+	window.history.replaceState({}, "", "/");
 
-	const f = async (url: string) => {
-		const urlFirst = url.split("?").at(0);
-		const urlSecond = url.split("?").at(1);
+	const allRoutes: Record<string, (params?: URLSearchParams) => string> = {
+		"/": () => page,
+		...routes,
+	};
 
-		const content = routes[urlFirst || "/"];
-		const params = new URLSearchParams(urlSecond);
+	const f = async (url: string): Promise<Response> => {
+		const urlObj = new URL(url, window.location.origin);
+		const pathname = urlObj.pathname;
+		const searchParams = urlObj.searchParams;
+
+		const content =
+			allRoutes[pathname] ||
+			allRoutes[`${pathname}/`] ||
+			allRoutes[pathname.replace(/\/$/, "")];
+
+		const isFound = !!content;
+
 		return {
-			text: async () => htmlWrap(content(params)),
-			ok: !!routes[url],
-			status: routes[url] ? 200 : 404,
+			text: async (): Promise<string> =>
+				htmlWrap(content ? content(searchParams) : ""),
+			ok: isFound,
+			status: isFound ? 200 : 404,
+			statusText: isFound ? "OK" : "Not Found",
 			headers: new Headers(),
+			url,
+			redirected: false,
+			type: "basic" as ResponseType,
+			clone: function () {
+				return this;
+			},
+			body: null,
+			bodyUsed: false,
+			arrayBuffer: async () => new ArrayBuffer(0),
+			blob: async () => new Blob(),
+			formData: async () => new FormData(),
+			json: async () => ({}),
 		} as Response;
 	};
+
 	globalThis.fetch = f as typeof fetch;
 }
 
@@ -51,9 +77,9 @@ export function delay(ms: number) {
 export function click(selector: string) {
 	const element = document.querySelector(selector);
 	if (!element) {
-		return expect(element != null);
+		expect(element).not.toBeNull();
 	}
-	element.dispatchEvent(
+	element?.dispatchEvent(
 		new MouseEvent("click", { bubbles: true }) as unknown as Event,
 	);
 }

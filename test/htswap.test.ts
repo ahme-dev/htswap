@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, expect, test } from "vitest";
 import { click, delay, input, setupEnvironment, untabHTML } from "./tools.ts";
 
@@ -33,16 +34,27 @@ describe("Links", async () => {
 	test("Should work with back button.", async () => {
 		setupEnvironment(
 			`
-			<div>
-				<a id="go" href="/new" target="#target">
+			<div id="page">
+				<a id="go" href="/page1" target="#page">
 					Go
 				</a>
-				<div id="target">Original</div>
+				<div id="content">Original</div>
 			</div>
 			`,
 			{
-				"/new": () => '<div id="target">Updated by swapInit</div>',
-				"/": () => '<div id="target">Original</div>',
+				"/page1": () => `
+					<div id="page">
+						<a id="go" href="/page2" target="#page">
+							Go
+						</a>
+						<div id="content">Page1</div>
+					</div>
+				`,
+				"/page2": () => `
+					<div id="page">
+						<div id="content">Page2</div>
+					</div>
+				`,
 			},
 		);
 
@@ -51,15 +63,19 @@ describe("Links", async () => {
 
 		click("#go");
 		await delay(10);
+		expect(document.querySelector("#content")?.textContent).toEqual("Page1");
 
-		expect(document.querySelector("#target")?.textContent).toEqual(
-			"Updated by swapInit",
-		);
+		click("#go");
+		await delay(10);
+		expect(document.querySelector("#content")?.textContent).toEqual("Page2");
 
 		window.history.back();
 		await delay(10);
+		expect(document.querySelector("#content")?.textContent).toEqual("Page1");
 
-		expect(document.querySelector("#target")?.textContent).toEqual("Original");
+		window.history.back();
+		await delay(10);
+		expect(document.querySelector("#content")?.textContent).toEqual("Original");
 	});
 });
 
