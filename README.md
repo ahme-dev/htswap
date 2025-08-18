@@ -1,6 +1,9 @@
-[![NPM Version](https://img.shields.io/npm/v/htswap?style=flat&color=lightsalmon&label=htswap)](https://www.npmjs.com/package/htswap)
-![jsDelivr hits (npm)](https://img.shields.io/jsdelivr/npm/hw/htswap?style=flat&label=CDN%20Hits&color=khaki)
-![NPM Downloads](https://img.shields.io/npm/dw/htswap?style=flat&label=Installs&color=lightcyan)
+[
+![NPM Version](https://img.shields.io/npm/v/htswap?style=flat-square&color=lightsalmon&label=htswap)
+![jsDelivr hits (npm)](https://img.shields.io/jsdelivr/npm/hw/htswap?style=flat-square&label=CDN%20Hits&color=khaki)
+![NPM Downloads](https://img.shields.io/npm/dw/htswap?style=flat-square&label=Installs&color=lightcyan)
+![npm package minimized gzipped size](https://img.shields.io/bundlejs/size/htswap?style=flat-square&label=Size&color=wheat)
+](https://www.npmjs.com/package/htswap)
 
 # 🔄 htswap
 
