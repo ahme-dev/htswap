@@ -1,5 +1,6 @@
-[![NPM Version](https://img.shields.io/npm/v/htswap?style=for-the-badge&color=red)](https://www.npmjs.com/package/htswap)
-
+[![NPM Version](https://img.shields.io/npm/v/htswap?style=flat&color=lightsalmon&label=htswap)](https://www.npmjs.com/package/htswap)
+![jsDelivr hits (npm)](https://img.shields.io/jsdelivr/npm/hw/htswap?style=flat&label=CDN%20Hits&color=khaki)
+![NPM Downloads](https://img.shields.io/npm/dw/htswap?style=flat&label=Installs&color=lightcyan)
 
 # 🔄 htswap
 
