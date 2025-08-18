@@ -34,7 +34,7 @@ Any of the variants can be installed through the following methods:
 🌐 Import from a CDN, changing the `dist` part to any of the variants:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/npm/htswap@0.3.0/dist/htswap.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/htswap@latest/dist/htswap.js"></script>
 ```
 
 📋 Install with a package manager and import any of the variants on the client side:

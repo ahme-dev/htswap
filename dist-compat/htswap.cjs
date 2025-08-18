@@ -1,4 +1,4 @@
-// htswap-0.3.0-git+https://github.com/ahme-dev/htswap.git
+// htswap-undefined-git+https://github.com/ahme-dev/htswap.git
 //#region rolldown:runtime
 var __create = Object.create;
 var __defProp = Object.defineProperty;

@@ -1,4 +1,4 @@
-// htswap-0.3.0-git+https://github.com/ahme-dev/htswap.git
+// htswap-undefined-git+https://github.com/ahme-dev/htswap.git
 
 //#region src/htswap.ts
 async function htswapReplace(href = location.href, target = "body", historyMode = "push") {
