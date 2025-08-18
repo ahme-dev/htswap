@@ -33,7 +33,7 @@ export async function htswapReplace(
 export function htswapAssign() {
 	document
 		.querySelectorAll(
-			"form:not([data-htswap-locked]), a:not([data-htswap-locked])",
+			"[data-htswap] form:not([data-htswap-locked]), [data-htswap] a:not([data-htswap-locked])",
 		)
 		.forEach((el) => {
 			el.setAttribute("data-htswap-locked", "true");
@@ -62,11 +62,10 @@ export function htswapAssign() {
 						const params = new URLSearchParams(
 							new FormData(el) as unknown as string,
 						);
-						const url = action + (action.includes("?") ? "&" : "?") + params;
 						htswapReplace(
 							el.getAttribute("data-htswap-target") || undefined,
 							el.getAttribute("data-htswap-history") || undefined,
-							url,
+							action + (action.includes("?") ? "&" : "?") + params,
 						);
 					}
 				};

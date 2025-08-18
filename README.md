@@ -7,7 +7,7 @@
 
 # 🔄 htswap
 
-**Minimal, lightweight script for seamless AJAX-style UI content swapping.** By adding `htswap` your anchors and forms get the speed of client-side-rendering in your server-side-rendered/static sites.
+**Minimal, lightweight script for seamless AJAX-style UI content swapping.** By importing `htswap`, and adding a `data-htswap` attribute, your anchors and forms get the speed of client-side-rendering in your server-side-rendered/static sites.
 
 Based on **Swap.js**, and inspired by **HTMZ**, **HTMX**, **Alpine-Ajax**, among others. A modern, smaller, more semantic alternative.
 
@@ -18,7 +18,7 @@ Based on **Swap.js**, and inspired by **HTMZ**, **HTMX**, **Alpine-Ajax**, among
 
 - **Dynamic Content**: Content on the page will be swapped dynamically, without reloading
 - **History Support**: Browser back/forward buttons will work seamlessly, without reloading  
-- **Opt-Out Enhancement**: Anchors and forms can be opted out by a single attribute
+- **Progressive Enhancement**: Anchors and forms can be opted opted in by a single attribute
 - **Loading States**: Loading state can be styled through `aria-busy="true"`
 - **NoJS Usable**: If JS is turned off, your anchors and forms will work as normal
 
@@ -45,7 +45,9 @@ Any of the variants can be installed through the following methods:
 
 ## 🛠️ Usage
 
-After making sure `htswap` is imported, you can utilize it as detailed below.
+After making sure `htswap` is imported, the `data-htswap` attribute can be on any element to let its children work with `htswap`.
+
+The attribute can be added on the `body` element to enable `htswap` on all the elements in the site.
 
 ### Anchors
 
@@ -53,7 +55,7 @@ Anchors automatically replace the whole page, replicating client-side behaviour.
 
 ```html
 <!-- on home page (/) -->
-<nav>
+<nav data-htswap>
 	<ul>
 		<li>
 			<a href="/account">Account</a>
@@ -62,11 +64,11 @@ Anchors automatically replace the whole page, replicating client-side behaviour.
 </nav>
 ```
 
-They can be enhanced by adding `data-htswap-target`, determining which element to swap dynamically, rather than using the whole page.
+They can be further enhanced by adding `data-htswap-target`, determining which element to swap dynamically, rather than using the whole page.
 
 ```html
 <!-- on dashboard users page (/dashboard/users) -->
-<div>
+<div data-htswap>
 	<aside>
 		<a href="/dashboard/users" data-htswap-target="#dashboard-content">Users</a>
 		<a href="/dashboard/products" data-htswap-target="#dashboard-content">Products</a>
@@ -81,11 +83,11 @@ All swapping operations work with **browser history**, and navigating backward w
 
 ### Forms 
 
-Forms are also automatically enhanced and support targetting. But they also add their inputs as URL params when swapping, allowing the server to filter according to the current state of the form.
+Forms are also automatically enhanced and support targetting. And they will add their inputs as URL or body params when swapping, allowing the server to take actions according to the current state of the form.
 
 ```html
 <!-- on search page (/products) -->
-<div>
+<div data-htswap>
 	<form action="/products" data-htswap-target="#list" method="get">
 		<input type="text" name="product-name" id="product-name" placeholder="Search products...">
 		<button type="submit">Search</button>
@@ -98,8 +100,6 @@ Forms are also automatically enhanced and support targetting. But they also add 
 </div>
 ```
 
-**For example**, if a form with action set on `/products` has an input named `product-name` with value `pc`, when submitted it will send its request as `/products?product-name=pc`.
-
 ### History
 
 Several modes of interacting with history are supported, with `push` being the default.
@@ -109,7 +109,9 @@ Several modes of interacting with history are supported, with `push` being the d
 - `none`: doesn't change the URL.
 
 ```html
-<a data-htswap-history="replace" href="/search" data-htswap-target="#list">Search</a>
+<div data-htswap>
+	<a data-htswap-history="replace" href="/search" data-htswap-target="#list">Search</a>
+</div>
 ```
 
 ### Locking
@@ -117,7 +119,9 @@ Several modes of interacting with history are supported, with `push` being the d
 Existing elements can be opted out of swapping, using `data-htswap-locked`.
 
 ```html
-<a data-htswap-locked href="/content" target="anIframe">Iframe</a>
+<div data-htswap>
+	<a data-htswap-locked href="/content" target="anIframe">Iframe</a>
+</div>
 ```
 
 ## ❓ Why? 

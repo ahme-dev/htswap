@@ -6,7 +6,7 @@ describe("Links", async () => {
 	test("Should swap on click", async () => {
 		setupEnvironment(
 			`
-			<div>
+			<div data-htswap>
 				<a id="go" href="/new" data-htswap-target="#target">
 					Go
 				</a>
@@ -34,7 +34,7 @@ describe("Links", async () => {
 	test("Should swap with back button", async () => {
 		setupEnvironment(
 			`
-			<div id="page">
+			<div id="page" data-htswap>
 				<a id="go" href="/page1" data-htswap-target="#page">
 					Go
 				</a>
@@ -43,7 +43,7 @@ describe("Links", async () => {
 			`,
 			{
 				"/page1": () => `
-					<div id="page">
+					<div id="page" data-htswap>
 						<a id="go" href="/page2" data-htswap-target="#page">
 							Go
 						</a>
@@ -51,7 +51,7 @@ describe("Links", async () => {
 					</div>
 				`,
 				"/page2": () => `
-					<div id="page">
+					<div id="page" data-htswap>
 						<div id="content">Page2</div>
 					</div>
 				`,
@@ -83,7 +83,7 @@ describe("Forms", async () => {
 	test("Should swap on submit with GET", async () => {
 		setupEnvironment(
 			`
-			<div>
+			<div data-htswap>
 				<form action="/search" data-htswap-target="#list">
 					<input type="text" id="title" name="title" />
 					<button id="do-search" type="submit">submit</button>
@@ -147,7 +147,7 @@ describe("Forms", async () => {
 	test("Should swap on submit with POST", async () => {
 		setupEnvironment(
 			`
-			<div>
+			<div data-htswap>
 				<form action="/signup" method="POST" data-htswap-target="#response">
 					<input type="text" id="username" name="username" />
 					<input type="email" id="email" name="email" />
