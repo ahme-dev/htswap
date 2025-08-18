@@ -76,9 +76,7 @@ export function delay(ms: number) {
 
 export function click(selector: string) {
 	const element = document.querySelector(selector);
-	if (!element) {
-		expect(element).not.toBeNull();
-	}
+	expect(element).not.toBeNull();
 	element?.dispatchEvent(
 		new MouseEvent("click", { bubbles: true }) as unknown as Event,
 	);

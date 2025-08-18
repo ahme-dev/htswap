@@ -7,7 +7,7 @@ describe("Links", async () => {
 		setupEnvironment(
 			`
 			<div>
-				<a id="go" href="/new" target="#target">
+				<a id="go" href="/new" data-htswap-target="#target">
 					Go
 				</a>
 				<div id="target">Original</div>
@@ -35,7 +35,7 @@ describe("Links", async () => {
 		setupEnvironment(
 			`
 			<div id="page">
-				<a id="go" href="/page1" target="#page">
+				<a id="go" href="/page1" data-htswap-target="#page">
 					Go
 				</a>
 				<div id="content">Original</div>
@@ -44,7 +44,7 @@ describe("Links", async () => {
 			{
 				"/page1": () => `
 					<div id="page">
-						<a id="go" href="/page2" target="#page">
+						<a id="go" href="/page2" data-htswap-target="#page">
 							Go
 						</a>
 						<div id="content">Page1</div>
@@ -84,7 +84,7 @@ describe("Forms", async () => {
 		setupEnvironment(
 			`
 			<div>
-				<form action="/search" target="#list">
+				<form action="/search" data-htswap-target="#list">
 					<input type="text" id="title" name="title" />
 					<button id="do-search" type="submit">submit</button>
 				</form>
@@ -113,6 +113,16 @@ describe("Forms", async () => {
 		const { htswapInit } = await import("../src/htswap.ts");
 		htswapInit();
 
+		expect(
+			untabHTML(document.querySelector("#list")?.innerHTML.toString() || ""),
+		).toEqual(
+			untabHTML(`
+			<li>P1</li>
+			<li>P2</li>
+			<li>P3</li>
+		`),
+		);
+
 		input("#title", "P1");
 		await delay(10);
 		click("#do-search");
@@ -125,7 +135,7 @@ describe("Forms", async () => {
 		input("#title", "P3");
 		await delay(10);
 		click("#do-search");
-		await delay(10);
+		await delay(100);
 
 		expect(
 			untabHTML(document.querySelector("#list")?.innerHTML.toString() || ""),

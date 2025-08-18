@@ -29,7 +29,9 @@ export async function htswapReplace(
 
 export function htswapAssign() {
 	document
-		.querySelectorAll('[target]:not([data-htswap-locked]):not([target^="_"])')
+		.querySelectorAll(
+			"form:not([data-htswap-locked]), a:not([data-htswap-locked])",
+		)
 		.forEach((el) => {
 			el.setAttribute("data-htswap-locked", "true");
 			if (el instanceof HTMLAnchorElement) {
@@ -37,7 +39,7 @@ export function htswapAssign() {
 					e.preventDefault();
 					htswapReplace(
 						el.getAttribute("href") || undefined,
-						el.getAttribute("target") || undefined,
+						el.getAttribute("data-htswap-target") || undefined,
 						el.getAttribute("data-htswap-history") || undefined,
 					);
 				};
@@ -50,7 +52,7 @@ export function htswapAssign() {
 					).toString();
 					htswapReplace(
 						action + (action.includes("?") ? "&" : "?") + params,
-						el.getAttribute("target") || undefined,
+						el.getAttribute("data-htswap-target") || undefined,
 						el.getAttribute("data-htswap-history") || undefined,
 					);
 				};

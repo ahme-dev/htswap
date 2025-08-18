@@ -7,7 +7,7 @@
 
 # 🔄 htswap
 
-**Minimal, lightweight script for seamless AJAX-style UI content swapping.** By adding `htswap` and applying the `target` attribute on your links and forms, you get the speed of client-side-rendering in your server-side-rendered/static sites.
+**Minimal, lightweight script for seamless AJAX-style UI content swapping.** By adding `htswap` your links and forms get the speed of client-side-rendering in your server-side-rendered/static sites.
 
 Based on **Swap.js**, and inspired by **HTMZ**, **HTMX**, **Alpine-Ajax**, among others. A modern, smaller, more semantic alternative.
 
@@ -16,10 +16,11 @@ Based on **Swap.js**, and inspired by **HTMZ**, **HTMX**, **Alpine-Ajax**, among
 
 ## ✨ Features
 
-- **Dynamic content**: Content on the page will be swapped dynamically, without reloading
-- **History support**: Browser back/forward buttons will work seamlessly, without reloading  
-- **Progressive enhancement**: Links and forms can be enhanced with a single attribute
-- **Loading states**: Loading state can be styled through `aria-busy="true"`
+- **Dynamic Content**: Content on the page will be swapped dynamically, without reloading
+- **History Support**: Browser back/forward buttons will work seamlessly, without reloading  
+- **Opt-Out Enhancement**: Links and forms can be opted out by a single attribute
+- **Loading States**: Loading state can be styled through `aria-busy="true"`
+- **NoJS Usable**: If JS is turned off, your links and forms will work as normal
 
 ## 📦 Installation
 
@@ -48,27 +49,27 @@ After making sure `htswap` is imported, you can utilize it as detailed below.
 
 ### 🔗 Links
 
-Links can be enhanced by adding `target`, determining which element to swap dynamically. The already existing `href` will determine which page to fetch for the swap operation.
+Links automatically replace the whole page, replicating client-side behaviour. The `href` will determine which page to fetch for swapping.
 
 ```html
 <!-- on home page (/) -->
 <nav>
 	<ul>
 		<li>
-			<a href="/account" target="body">Account</a>
+			<a href="/account">Account</a>
 		</li>
 	</ul>
 </nav>
 ```
 
-If the `body` is targeted, the whole page will be swapped. This can be used as default behaviour, replicating client-side navigation.
+They can be enhanced by adding `data-htswap-target`, determining which element to swap dynamically, rather than using the whole page.
 
 ```html
 <!-- on dashboard users page (/dashboard/users) -->
 <div>
 	<aside>
-		<a href="/dashboard/users" target="#dashboard-content">Users</a>
-		<a href="/dashboard/products" target="#dashboard-content">Products</a>
+		<a href="/dashboard/users" data-htswap-target="#dashboard-content">Users</a>
+		<a href="/dashboard/products" data-htswap-target="#dashboard-content">Products</a>
 	</aside>
 	<main id="dashboard-content">
 		<!-- Content gets swapped here -->
@@ -76,18 +77,16 @@ If the `body` is targeted, the whole page will be swapped. This can be used as d
 </div>
 ```
 
-**Any element can be targeted**, adding the ability to do partial swapping.
-
 All swapping operations work with **browser history**, and navigating backward will swap back to the previous content, without a reload.
 
 ### 📝 Forms 
 
-Forms can also be enhanced easily with `target` alongside the existing `method` and `action`. Targeting behaves the same as with links.
+Forms are also automatically enhanced and support targetting. But they also add their inputs as URL params when swapping, allowing the server to filter according to the current state of the form.
 
 ```html
 <!-- on search page (/products) -->
 <div>
-	<form action="/products" target="#list" method="get">
+	<form action="/products" data-htswap-target="#list" method="get">
 		<input type="text" name="product-name" id="product-name" placeholder="Search products...">
 		<button type="submit">Search</button>
 	</form>
@@ -98,8 +97,6 @@ Forms can also be enhanced easily with `target` alongside the existing `method` 
 	</ul>
 </div>
 ```
-
-Forms add their inputs as URL params when fetching, allowing the server to filter according to the current state of the form.
 
 **For example**, if a form with action set on `/products` has an input named `product-name` with value `pc`, when submitted it will send its request as `/products?product-name=pc`.
 
@@ -112,12 +109,12 @@ Several modes of interacting with history are supported, with `push` being the d
 - `none`: doesn't change the URL.
 
 ```html
-<a data-htswap-history="replace" href="/search" target="#list">Search</a>
+<a data-htswap-history="replace" href="/search" data-htswap-target="#list">Search</a>
 ```
 
 ### 🔒 Locking
 
-If you have existing elements with `target` you can opt them out of swapping, using `data-htswap-locked`.
+You can opt existing elements out of swapping, using `data-htswap-locked`.
 
 ```html
 <a data-htswap-locked href="/content" target="anIframe">Iframe</a>
