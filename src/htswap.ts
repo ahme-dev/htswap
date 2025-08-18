@@ -2,7 +2,7 @@ export async function htswapReplace(
 	target: string = "body",
 	historyMode: "replace" | "push" | "none" | string = "push",
 	url: string = location.href,
-	body?: string,
+	body?: FormData,
 ) {
 	const currentTargetEl = document.querySelector(target);
 	currentTargetEl?.setAttribute("aria-busy", "true");
@@ -52,12 +52,11 @@ export function htswapAssign() {
 					const action = el.action || location.href;
 
 					if (el.method === "POST") {
-						const body = JSON.stringify(Object.fromEntries(new FormData(el)));
 						htswapReplace(
 							el.getAttribute("data-htswap-target") || undefined,
 							el.getAttribute("data-htswap-history") || undefined,
 							action,
-							body,
+							new FormData(el),
 						);
 					} else {
 						const params = new URLSearchParams(
