@@ -1,4 +1,4 @@
-export async function htswapReplace(
+export async function htswapUpdate(
 	target: string = "body",
 	historyMode: "replace" | "push" | "none" | string = "push",
 	url: string = location.href,
@@ -11,11 +11,8 @@ export async function htswapReplace(
 		headers: { "htswap-target": target },
 		method: body ? "POST" : "GET",
 		body,
-	});
-	const newDoc = new DOMParser().parseFromString(
-		await response.text(),
-		"text/html",
-	);
+	}).then((r) => r.text());
+	const newDoc = new DOMParser().parseFromString(response, "text/html");
 	const newTargetEl = newDoc.querySelector(target);
 
 	if (!newTargetEl || !currentTargetEl) {
@@ -30,7 +27,7 @@ export async function htswapReplace(
 	}
 }
 
-export function htswapAssign() {
+export function htswapLock() {
 	document
 		.querySelectorAll(
 			"[data-htswap] form:not([data-htswap-locked]), [data-htswap] a:not([data-htswap-locked])",
@@ -40,7 +37,7 @@ export function htswapAssign() {
 			if (el instanceof HTMLAnchorElement) {
 				el.onclick = (e: MouseEvent) => {
 					e.preventDefault();
-					htswapReplace(
+					htswapUpdate(
 						el.getAttribute("data-htswap-target") || undefined,
 						el.getAttribute("data-htswap-history") || undefined,
 						el.getAttribute("href") || undefined,
@@ -51,8 +48,8 @@ export function htswapAssign() {
 					e.preventDefault();
 					const action = el.action || location.href;
 
-					if (el.method === "POST") {
-						htswapReplace(
+					if (el.method.toUpperCase() === "POST") {
+						htswapUpdate(
 							el.getAttribute("data-htswap-target") || undefined,
 							el.getAttribute("data-htswap-history") || undefined,
 							action,
@@ -62,7 +59,7 @@ export function htswapAssign() {
 						const params = new URLSearchParams(
 							new FormData(el) as unknown as string,
 						);
-						htswapReplace(
+						htswapUpdate(
 							el.getAttribute("data-htswap-target") || undefined,
 							el.getAttribute("data-htswap-history") || undefined,
 							action + (action.includes("?") ? "&" : "?") + params,
@@ -74,13 +71,13 @@ export function htswapAssign() {
 }
 
 export function htswapInit() {
-	htswapAssign();
-	new MutationObserver(htswapAssign).observe(document.documentElement, {
+	htswapLock();
+	new MutationObserver(htswapLock).observe(document.documentElement, {
 		childList: true,
 		subtree: true,
 	});
 	window.addEventListener("popstate", (e) =>
-		htswapReplace(e.state?.target, "none"),
+		htswapUpdate(e.state?.target, "none"),
 	);
 }
 
