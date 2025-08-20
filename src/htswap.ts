@@ -34,7 +34,9 @@ export async function htswapUpdate(
 			const newTargetEl = new DOMParser()
 				.parseFromString(response, "text/html")
 				.querySelector(selector);
-			if (!newTargetEl) throw Error(`"${selector}" not in response`);
+			if (!newTargetEl) {
+				return console.error(`htswap: "${selector}" not in response`);
+			}
 
 			if (mergeMode === "update") element.innerHTML = newTargetEl.innerHTML;
 			else if (mergeMode === "replace")
