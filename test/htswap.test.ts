@@ -63,7 +63,7 @@ describe("Links", async () => {
 		setupEnvironment(
 			`
 			<div data-htswap>
-				<a id="go" href="/new" data-htswap-locked>
+				<a id="go" href="/new" data-htlocked>
 					Go
 				</a>
 				<div id="target">Original</div>

@@ -112,7 +112,7 @@ Several modes of interacting with history are supported, with `push` being the d
 
 ```html
 <div>
-	<a href="/search" data-htswap="#list" data-htswap-history="replace">Search</a>
+	<a href="/search" data-htswap="#list" data-hthistory="replace">Search</a>
 </div>
 ```
 
@@ -120,17 +120,17 @@ Several modes of interacting with history are supported, with `push` being the d
 
 #### Locking
 
-Individual elements under `data-htswap` can be opted out of swapping, using `data-htswap-locked`.
+Individual elements under `data-htswap` can be opted out of swapping, using `data-htlocked`.
 
 ```html
 <div>
-	<a href="/content" data-htswap-target="#content" data-htswap-locked>Iframe</a>
+	<a href="/content" data-htswap="#content" data-htlocked>Iframe</a>
 </div>
 ```
 
 #### No Script
 
-It is recommended for the backend to check the `htswap` header, and only return partial content if it's present, otherwise return the full page to avoid users who have js disabled from seeing partial content as a page.
+It is recommended for the backend to check the `x-htswap` header, and only return partial content if it's present, otherwise return the full page to avoid users who have js disabled from seeing partial content as a page.
 
 ## ❓ Why? 
 

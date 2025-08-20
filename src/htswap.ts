@@ -58,13 +58,13 @@ export async function htswapUpdate(
 export function htswapLock() {
 	document
 		.querySelectorAll(
-			"[data-htswap] form:not([data-htswap-locked]), [data-htswap] a:not([data-htswap-locked]), a[data-htswap]:not([data-htswap-locked]), form[data-htswap]:not([data-htswap-locked])",
+			"[data-htswap] form:not([data-htlocked]), [data-htswap] a:not([data-htlocked]), a[data-htswap]:not([data-htlocked]), form[data-htswap]:not([data-htlocked])",
 		)
 		.forEach((el) => {
-			el.setAttribute("data-htswap-locked", "true");
+			el.setAttribute("data-htlocked", "true");
 
 			const target = el.getAttribute("data-htswap") || undefined;
-			const historyMode = el.getAttribute("data-htswap-history") || undefined;
+			const historyMode = el.getAttribute("data-hthistory") || undefined;
 			const url =
 				(el as HTMLFormElement).action ||
 				(el as HTMLAnchorElement).href ||
@@ -78,17 +78,16 @@ export function htswapLock() {
 			} else if (el instanceof HTMLFormElement) {
 				el.onsubmit = (e: Event) => {
 					e.preventDefault();
-					if (el.method.toUpperCase() === "POST") {
-						htswapUpdate(target, historyMode, url, new FormData(el));
-					} else {
-						htswapUpdate(
-							target,
-							historyMode,
-							url +
-								(url.includes("?") ? "&" : "?") +
-								new URLSearchParams(new FormData(el) as unknown as string),
-						);
-					}
+					htswapUpdate(
+						target,
+						historyMode,
+						el.method.toUpperCase() === "POST"
+							? url
+							: url +
+									(url.includes("?") ? "&" : "?") +
+									new URLSearchParams(new FormData(el) as unknown as string),
+						new FormData(el),
+					);
 				};
 			}
 		});
