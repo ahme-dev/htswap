@@ -10,8 +10,12 @@ export async function htswapUpdate(
 		return {
 			from: from || selector,
 			element: document.querySelector(to || selector) as Element,
-			mergeMode: mergeMode as InsertPosition | "outerHTML" | "innerHTML",
-		};
+			mergeMode: mergeMode as
+				| InsertPosition
+				| "outerHTML"
+				| "innerHTML"
+				| "remove",
+		} as const;
 	});
 
 	currentTargElements.forEach(({ element }) =>
@@ -40,6 +44,7 @@ export async function htswapUpdate(
 			if (mergeMode === "outerHTML") element.outerHTML = newTargetEl.outerHTML;
 			else if (mergeMode === "innerHTML")
 				element.innerHTML = newTargetEl.innerHTML;
+			else if (mergeMode === "remove") element.remove();
 			else element.insertAdjacentHTML(mergeMode, newTargetEl.innerHTML);
 		});
 

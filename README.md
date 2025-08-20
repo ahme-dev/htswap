@@ -159,6 +159,7 @@ The following modes are available:
 - `afterend`: Inserts the new content inside the target element, as the last child.
 - `beforebegin`: Inserts the new content as sibling of the target element, before it.
 - `beforeend`: Inserts the new content as sibling of the target element, after it.
+- `remove`: Removes the target element.
 
 ### Target Aliases
 
