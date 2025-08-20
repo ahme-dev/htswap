@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, test } from "vitest";
-import { click, delay, input, setupEnvironment, untabHTML } from "./tools.ts";
+import { click, delay, input, setupEnvironment, untab } from "./tools.ts";
 
 describe("Links", async () => {
 	test("Should swap on click", async () => {
@@ -110,6 +110,41 @@ describe("Links", async () => {
 			"2 Updated by swapInit",
 		);
 	});
+
+	test("Should swap according to modes", async () => {
+		setupEnvironment(
+			`
+			<div data-htswap>
+				<a id="go" href="/new" data-htswap-target="#target@afterend, #target4@beforebegin">
+					Go
+				</a>
+				<div id="target-list">
+					<div id="target">First</div>
+					<div id="target4">Fourth</div>
+				</div>
+			</div>
+			`,
+			{
+				"/new": () =>
+					'<div id="target">Second</div><div id="target4">Third</div>',
+			},
+		);
+
+		const { htswapInit } = await import("../src/htswap.ts");
+
+		htswapInit();
+
+		click("#go");
+
+		await delay(10);
+
+		expect(untab(document.querySelector("#target-list")?.textContent)).toEqual(
+			untab(`
+				FirstSecond
+				ThirdFourth
+			`),
+		);
+	});
 });
 
 describe("Forms", async () => {
@@ -136,7 +171,7 @@ describe("Forms", async () => {
 						)
 						.map((v) => `<li>${v}</li>`);
 
-					return untabHTML(`
+					return untab(`
 					<ul id="list">
 						${elements.toString()}
 					</ul>
@@ -149,9 +184,9 @@ describe("Forms", async () => {
 		htswapInit();
 
 		expect(
-			untabHTML(document.querySelector("#list")?.innerHTML.toString() || ""),
+			untab(document.querySelector("#list")?.innerHTML.toString() || ""),
 		).toEqual(
-			untabHTML(`
+			untab(`
 			<li>P1</li>
 			<li>P2</li>
 			<li>P3</li>
@@ -164,8 +199,8 @@ describe("Forms", async () => {
 		await delay(10);
 
 		expect(
-			untabHTML(document.querySelector("#list")?.innerHTML.toString() || ""),
-		).toEqual(untabHTML(`<li>P1</li>`));
+			untab(document.querySelector("#list")?.innerHTML.toString() || ""),
+		).toEqual(untab(`<li>P1</li>`));
 
 		input("#title", "P3");
 		await delay(10);
@@ -173,8 +208,8 @@ describe("Forms", async () => {
 		await delay(10);
 
 		expect(
-			untabHTML(document.querySelector("#list")?.innerHTML.toString() || ""),
-		).toEqual(untabHTML(`<li>P3</li>`));
+			untab(document.querySelector("#list")?.innerHTML.toString() || ""),
+		).toEqual(untab(`<li>P3</li>`));
 	});
 
 	test("Should swap on submit with POST", async () => {
@@ -196,7 +231,7 @@ describe("Forms", async () => {
 					const username: string = fd.get("username") as string;
 					const email: string = fd.get("email") as string;
 
-					return untabHTML(`
+					return untab(`
 					<div id="response">
 						<p>Welcome, ${username}!</p>
 						<p>Email: ${email}</p>
@@ -218,11 +253,9 @@ describe("Forms", async () => {
 		await delay(10);
 
 		expect(
-			untabHTML(
-				document.querySelector("#response")?.innerHTML.toString() || "",
-			),
+			untab(document.querySelector("#response")?.innerHTML.toString() || ""),
 		).toEqual(
-			untabHTML(`
+			untab(`
 			<p>Welcome, testuser!</p>
 			<p>Email: test@example.com</p>
 		`),

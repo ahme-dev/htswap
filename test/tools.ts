@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { expect } from "vitest";
 
-export function untabHTML(htmlString: string) {
-	const lines = htmlString.split("\n").filter((line) => line.trim());
+export function untab(htmlString?: string) {
+	const lines = (htmlString || "").split("\n").filter((line) => line.trim());
 	if (lines.length === 0) return "";
 
 	const firstLineTabs = lines[0].match(/^\t*/)?.[0].length;
@@ -18,7 +18,7 @@ export function untabHTML(htmlString: string) {
 }
 
 function htmlWrap(content: string): string {
-	return `<html><head></head><body>${untabHTML(content)}</body></html>`;
+	return `<html><head></head><body>${untab(content)}</body></html>`;
 }
 
 export function setupEnvironment(
