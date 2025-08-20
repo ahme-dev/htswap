@@ -37,7 +37,15 @@
 			}
 		}
 	},
+	"size-limit": [
+		{
+			"path": "src/htswap.ts",
+			"gzip": true,
+			"limit": "999b"
+		}
+	],
 	"scripts": {
+		"size": "size-limit",
 		"build": "tsdown",
 		"test": "vitest run --dangerouslyIgnoreUnhandledErrors",
 		"prepublishOnly": "pnpm run build",
@@ -45,8 +53,10 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.0.6",
+		"@size-limit/preset-small-lib": "^11.2.0",
 		"jsdom": "^26.1.0",
 		"publint": "^0.3.12",
+		"size-limit": "^11.2.0",
 		"tsdown": "^0.14.1",
 		"typescript": "^5.8.3",
 		"vitest": "^3.2.4"
