@@ -148,7 +148,7 @@ describe("Forms", async () => {
 		setupEnvironment(
 			`
 			<div data-htswap>
-				<form action="/signup" method="POST" data-htswap-target="#response">
+				<form action="/signup" method="post" data-htswap-target="#response">
 					<input type="text" id="username" name="username" />
 					<input type="email" id="email" name="email" />
 					<input type="password" id="password" name="password" />

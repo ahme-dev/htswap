@@ -28,15 +28,24 @@ export function setupEnvironment(
 	document.body.innerHTML = htmlWrap(page);
 	window.history.replaceState({}, "", "/");
 
-	const allRoutes: Record<string, (params?: URLSearchParams) => string> = {
+	const allRoutes: Record<
+		string,
+		(params?: URLSearchParams | FormData) => string
+	> = {
 		"/": () => page,
 		...routes,
 	};
 
-	const f = async (url: string): Promise<Response> => {
+	const f = async (url: string, init?: RequestInit) => {
 		const urlObj = new URL(url, window.location.origin);
 		const pathname = urlObj.pathname;
-		const searchParams = urlObj.searchParams;
+
+		let params: URLSearchParams | FormData | undefined;
+		if (init?.body instanceof FormData) {
+			params = init.body as FormData;
+		} else {
+			params = urlObj.searchParams;
+		}
 
 		const content =
 			allRoutes[pathname] ||
@@ -47,7 +56,7 @@ export function setupEnvironment(
 
 		return {
 			text: async (): Promise<string> =>
-				htmlWrap(content ? content(searchParams) : ""),
+				htmlWrap(content ? content(params) : ""),
 			ok: isFound,
 			status: isFound ? 200 : 404,
 			statusText: isFound ? "OK" : "Not Found",
@@ -62,7 +71,8 @@ export function setupEnvironment(
 			bodyUsed: false,
 			arrayBuffer: async () => new ArrayBuffer(0),
 			blob: async () => new Blob(),
-			formData: async () => new FormData(),
+			formData: async () =>
+				params instanceof FormData ? params : new FormData(),
 			json: async () => ({}),
 		} as Response;
 	};

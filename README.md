@@ -20,7 +20,7 @@ Based on **Swap.js**, and inspired by **HTMZ**, **HTMX**, **Alpine-Ajax**, among
 - **History Support**: Browser back/forward buttons will work seamlessly, without reloading  
 - **Progressive Enhancement**: Anchors and forms can be opted opted in by a single attribute
 - **Loading States**: Loading state can be styled through `aria-busy="true"`
-- **NoJS Usable**: If JS is turned off, your anchors and forms will work as normal
+- **Graceful Degradation**: If JS is turned off, your anchors and forms will work as normal
 
 ## 📦 Installation
 
@@ -114,15 +114,21 @@ Several modes of interacting with history are supported, with `push` being the d
 </div>
 ```
 
-### Locking
+### More
 
-Existing elements can be opted out of swapping, using `data-htswap-locked`.
+#### Locking
+
+Individual elements under `data-htswap` can be opted out of swapping, using `data-htswap-locked`.
 
 ```html
 <div data-htswap>
 	<a data-htswap-locked href="/content" target="anIframe">Iframe</a>
 </div>
 ```
+
+#### No Script
+
+It is recommended for the backend to check the `htswap-target` header, and only return partial content if it's present, otherwise return the full page to avoid users who have js disabled from seeing partial content as a page.
 
 ## ❓ Why? 
 
