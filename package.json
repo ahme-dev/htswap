@@ -9,6 +9,14 @@
 	"publishConfig": {
 		"access": "public"
 	},
+	"keywords": [
+		"htswap",
+		"swap",
+		"htmx",
+		"ajax",
+		"ui",
+		"minimal"
+	],
 	"files": [
 		"dist",
 		"dist-min",
