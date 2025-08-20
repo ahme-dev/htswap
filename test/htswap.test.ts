@@ -3,11 +3,93 @@ import { describe, expect, test } from "vitest";
 import { click, delay, input, setupEnvironment, untab } from "./tools.ts";
 
 describe("Links", async () => {
-	test("Should swap on click", async () => {
+	test("Should swap with parent activated", async () => {
 		setupEnvironment(
 			`
 			<div data-htswap>
-				<a id="go" href="/new" data-htswap-target="#target">
+				<a id="go" href="/new">
+					Go
+				</a>
+				<div id="target">Original</div>
+			</div>
+			`,
+			{
+				"/new": () => '<div id="target">Updated by swapInit</div>',
+			},
+		);
+
+		const { htswapInit } = await import("../src/htswap.ts");
+
+		htswapInit();
+
+		click("#go");
+
+		await delay(10);
+
+		expect(document.querySelector("#target")?.textContent).toEqual(
+			"Updated by swapInit",
+		);
+	});
+
+	test("Should swap with target not specified", async () => {
+		setupEnvironment(
+			`
+			<div>
+				<a id="go" href="/new" data-htswap>
+					Go
+				</a>
+				<div id="target">Original</div>
+			</div>
+			`,
+			{
+				"/new": () => '<div id="target">Updated by swapInit</div>',
+			},
+		);
+
+		const { htswapInit } = await import("../src/htswap.ts");
+
+		htswapInit();
+
+		click("#go");
+
+		await delay(10);
+
+		expect(document.querySelector("#target")?.textContent).toEqual(
+			"Updated by swapInit",
+		);
+	});
+
+	test("Should not swap with locked specifiecd", async () => {
+		setupEnvironment(
+			`
+			<div data-htswap>
+				<a id="go" href="/new" data-htswap-locked>
+					Go
+				</a>
+				<div id="target">Original</div>
+			</div>
+			`,
+			{
+				"/new": () => '<div id="target">Updated by swapInit</div>',
+			},
+		);
+
+		const { htswapInit } = await import("../src/htswap.ts");
+
+		htswapInit();
+
+		click("#go");
+
+		await delay(10);
+
+		expect(document.querySelector("#target")?.textContent).toEqual("Original");
+	});
+
+	test("Should swap with target specified", async () => {
+		setupEnvironment(
+			`
+			<div>
+				<a id="go" href="/new" data-htswap="#target">
 					Go
 				</a>
 				<div id="target">Original</div>
@@ -34,8 +116,8 @@ describe("Links", async () => {
 	test("Should swap with back button", async () => {
 		setupEnvironment(
 			`
-			<div id="page" data-htswap>
-				<a id="go" href="/page1" data-htswap-target="#page">
+			<div id="page">
+				<a id="go" href="/page1" data-htswap="#page">
 					Go
 				</a>
 				<div id="content">Original</div>
@@ -43,15 +125,15 @@ describe("Links", async () => {
 			`,
 			{
 				"/page1": () => `
-					<div id="page" data-htswap>
-						<a id="go" href="/page2" data-htswap-target="#page">
+					<div id="page">
+						<a id="go" href="/page2" data-htswap="#page">
 							Go
 						</a>
 						<div id="content">Page1</div>
 					</div>
 				`,
 				"/page2": () => `
-					<div id="page" data-htswap>
+					<div id="page">
 						<div id="content">Page2</div>
 					</div>
 				`,
@@ -81,8 +163,8 @@ describe("Links", async () => {
 	test("Should swap multiple targets if specified", async () => {
 		setupEnvironment(
 			`
-			<div data-htswap>
-				<a id="go" href="/new" data-htswap-target="#target, #target2">
+			<div>
+				<a id="go" href="/new" data-htswap="#target, #target2">
 					Go
 				</a>
 				<div id="target">Original</div>
@@ -111,11 +193,11 @@ describe("Links", async () => {
 		);
 	});
 
-	test("Should swap according to modes", async () => {
+	test("Should swap according to merge modes", async () => {
 		setupEnvironment(
 			`
-			<div data-htswap>
-				<a id="go" href="/new" data-htswap-target="#target@afterend, #target4@beforebegin">
+			<div>
+				<a id="go" href="/new" data-htswap="#target@afterend, #target4@beforebegin">
 					Go
 				</a>
 				<div id="target-list">
@@ -151,8 +233,8 @@ describe("Forms", async () => {
 	test("Should swap on submit with GET", async () => {
 		setupEnvironment(
 			`
-			<div data-htswap>
-				<form action="/search" data-htswap-target="#list">
+			<div>
+				<form action="/search" data-htswap="#list">
 					<input type="text" id="title" name="title" />
 					<button id="do-search" type="submit">submit</button>
 				</form>
@@ -215,8 +297,8 @@ describe("Forms", async () => {
 	test("Should swap on submit with POST", async () => {
 		setupEnvironment(
 			`
-			<div data-htswap>
-				<form action="/signup" method="post" data-htswap-target="#response">
+			<div>
+				<form action="/signup" method="post" data-htswap="#response">
 					<input type="text" id="username" name="username" />
 					<input type="email" id="email" name="email" />
 					<input type="password" id="password" name="password" />

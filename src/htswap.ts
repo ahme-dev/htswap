@@ -24,7 +24,7 @@ export async function htswapUpdate(
 		const controller = new AbortController();
 		setTimeout(() => controller.abort(), 5e3);
 		const response = await fetch(url, {
-			headers: { "htswap-target": target },
+			headers: { "x-htswap": target },
 			method: body ? "POST" : "GET",
 			signal: controller.signal,
 			body,
@@ -56,12 +56,12 @@ export async function htswapUpdate(
 export function htswapLock() {
 	document
 		.querySelectorAll(
-			"[data-htswap] form:not([data-htswap-locked]), [data-htswap] a:not([data-htswap-locked])",
+			"[data-htswap] form:not([data-htswap-locked]), [data-htswap] a:not([data-htswap-locked]), a[data-htswap]:not([data-htswap-locked]), form[data-htswap]:not([data-htswap-locked])",
 		)
 		.forEach((el) => {
 			el.setAttribute("data-htswap-locked", "true");
 
-			const target = el.getAttribute("data-htswap-target") || undefined;
+			const target = el.getAttribute("data-htswap") || undefined;
 			const historyMode = el.getAttribute("data-htswap-history") || undefined;
 			const url =
 				(el as HTMLFormElement).action ||

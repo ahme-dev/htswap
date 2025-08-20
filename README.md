@@ -18,7 +18,7 @@ Based on **Swap.js**, and inspired by **HTMZ**, **HTMX**, **Alpine-Ajax**, among
 
 - **Dynamic Content**: Content on the page will be swapped dynamically, without reloading
 - **History Support**: Browser back/forward buttons will work seamlessly, without reloading  
-- **Progressive Enhancement**: Anchors and forms can be opted opted in by a single attribute
+- **Progressive Enhancement**: Anchors and forms can be opted in by a single attribute
 - **Loading States**: Loading state can be styled through `aria-busy="true"`
 - **Graceful Degradation**: If JS is turned off, your anchors and forms will work as normal
 
@@ -45,9 +45,9 @@ Any of the variants can be installed through the following methods:
 
 ## 🛠️ Usage
 
-After making sure `htswap` is imported, the `data-htswap` attribute can be on any element to let its children work with `htswap`.
+After making sure `htswap` is imported, the `data-htswap` attribute can be on any element to let its children work with `htswap` automatically.
 
-The attribute can be added on the `body` element to enable `htswap` on all the elements in the site.
+The attribute can be added on the `body` element to enable `htswap` on all the links and anchors in the site.
 
 ### Anchors
 
@@ -64,20 +64,22 @@ Anchors automatically replace the whole page, replicating client-side behaviour.
 </nav>
 ```
 
-They can be further enhanced by adding `data-htswap-target`, determining which element to swap dynamically, rather than using the whole page.
+They can be further enhanced by adding `data-htswap` on them and giving it a target, determining which element to swap dynamically, rather than using the whole page.
 
 ```html
 <!-- on dashboard users page (/dashboard/users) -->
-<div data-htswap>
+<div>
 	<aside>
-		<a href="/dashboard/users" data-htswap-target="#dashboard-content">Users</a>
-		<a href="/dashboard/products" data-htswap-target="#dashboard-content">Products</a>
+		<a href="/dashboard/users" data-htswap="#dashboard-content">Users</a>
+		<a href="/dashboard/products" data-htswap="#dashboard-content">Products</a>
 	</aside>
 	<main id="dashboard-content">
 		<!-- Content gets swapped here -->
 	</main>
 </div>
 ```
+
+Note that the parent element having `data-htswap` is not necessary anymore as the elements themselves have it.
 
 All swapping operations work with **browser history**, and navigating backward will swap back to the previous content, without a reload.
 
@@ -87,8 +89,8 @@ Forms are also automatically enhanced and support targetting. And they will add 
 
 ```html
 <!-- on search page (/products) -->
-<div data-htswap>
-	<form action="/products" data-htswap-target="#list" method="get">
+<div>
+	<form action="/products" data-htswap="#list" method="get">
 		<input type="text" name="product-name" id="product-name" placeholder="Search products...">
 		<button type="submit">Search</button>
 	</form>
@@ -109,8 +111,8 @@ Several modes of interacting with history are supported, with `push` being the d
 - `none`: doesn't change the URL.
 
 ```html
-<div data-htswap>
-	<a data-htswap-history="replace" href="/search" data-htswap-target="#list">Search</a>
+<div>
+	<a href="/search" data-htswap="#list" data-htswap-history="replace">Search</a>
 </div>
 ```
 
@@ -121,22 +123,22 @@ Several modes of interacting with history are supported, with `push` being the d
 Individual elements under `data-htswap` can be opted out of swapping, using `data-htswap-locked`.
 
 ```html
-<div data-htswap>
-	<a data-htswap-locked href="/content" target="anIframe">Iframe</a>
+<div>
+	<a href="/content" data-htswap-target="#content" data-htswap-locked>Iframe</a>
 </div>
 ```
 
 #### No Script
 
-It is recommended for the backend to check the `htswap-target` header, and only return partial content if it's present, otherwise return the full page to avoid users who have js disabled from seeing partial content as a page.
+It is recommended for the backend to check the `htswap` header, and only return partial content if it's present, otherwise return the full page to avoid users who have js disabled from seeing partial content as a page.
 
 ## ❓ Why? 
 
 With this section being personal reasoning, I'll first go through similar libraries/scripts, detailing what I don't like about them:
 
-- [`Swap.js`](https://github.com/josephernest/Swap.js): 450b gzipped, no form support, old codebase.
+- [`Swap.js`](https://github.com/josephernest/Swap.js): 450b gzipped, no form support, no history or merge modes, old codebase.
 - [`Alpine-AJAX`](https://alpine-ajax.js.org/): 3kb gzipped, requires `alpinejs` to work.
-- [`HTMZ`](https://leanrada.com/htmz/): 160b gzipped, noticeable 1-2 second delay on the first click, elements don't work when js is turned off. 
+- [`HTMZ`](https://leanrada.com/htmz/): 160b gzipped, noticeable 1-2 second delay on the first click, no history or merge modes, elements don't work when js is turned off. 
 - [`HTMX`](https://htmx.org/): 11kb gzipped, too large, too flexible and verbose, decides that other elements (e.g. buttons, divs) should make ajax requests.
 - [`zjax`](https://www.zjax.dev/): 5kb gzipped, includes client-side interactivity logic, disregards built-in anchor/form logic.
 - [`data-star`](https://data-star.dev/): 10kb gzipped, too large, covers too much ground, includes client-side interactivity logic, disregards built-in anchor/form logic, needs backend integration (potentially outdated point).
