@@ -2,6 +2,14 @@ export async function htswapUpdate(
 	target: string = "body",
 	historyMode: "replace" | "push" | "none" | string = "push",
 	url: string = location.href,
+	mode:
+		| "append"
+		| "prepend"
+		| "replace"
+		| "update"
+		| "after"
+		| "before"
+		| string = "replace",
 	body?: FormData,
 ) {
 	const currentTargetEl = document.querySelector(target);
@@ -22,11 +30,26 @@ export async function htswapUpdate(
 		if (!newTargetEl || !currentTargetEl)
 			throw new Error(`Target "${target}" not found`);
 
-		currentTargetEl.outerHTML = newTargetEl.outerHTML;
+		if (mode === "update") currentTargetEl.innerHTML = newTargetEl.innerHTML;
+		else if (mode === "replace")
+			currentTargetEl.outerHTML = newTargetEl.outerHTML;
+		else {
+			currentTargetEl.insertAdjacentHTML(
+				mode === "prepend"
+					? "afterbegin"
+					: mode === "append"
+						? "beforeend"
+						: mode === "before"
+							? "beforebegin"
+							: "afterend",
+				newTargetEl.innerHTML,
+			);
+		}
+
 		if (historyMode === "push") {
-			history.pushState({ target }, "", url);
+			history.pushState({ target, mode }, "", url);
 		} else if (historyMode === "replace") {
-			history.replaceState({ target }, "", url);
+			history.replaceState({ target, mode }, "", url);
 		}
 	} catch (e) {
 		currentTargetEl?.setAttribute("aria-busy", "false");
@@ -41,35 +64,32 @@ export function htswapLock() {
 		)
 		.forEach((el) => {
 			el.setAttribute("data-htswap-locked", "true");
+
+			const target = el.getAttribute("data-htswap-target") || undefined;
+			const historyMode = el.getAttribute("data-htswap-history") || undefined;
+			const mode = el.getAttribute("data-htswap-mode") || undefined;
+			const url =
+				el.getAttribute("action") || el.getAttribute("href") || location.href;
+
 			if (el instanceof HTMLAnchorElement) {
 				el.onclick = (e: MouseEvent) => {
 					e.preventDefault();
-					htswapUpdate(
-						el.getAttribute("data-htswap-target") || undefined,
-						el.getAttribute("data-htswap-history") || undefined,
-						el.getAttribute("href") || undefined,
-					);
+					htswapUpdate(target, historyMode, url, mode);
 				};
 			} else if (el instanceof HTMLFormElement) {
 				el.onsubmit = (e: Event) => {
 					e.preventDefault();
-					const action = el.action || location.href;
-
 					if (el.method.toUpperCase() === "POST") {
-						htswapUpdate(
-							el.getAttribute("data-htswap-target") || undefined,
-							el.getAttribute("data-htswap-history") || undefined,
-							action,
-							new FormData(el),
-						);
+						htswapUpdate(target, historyMode, url, mode, new FormData(el));
 					} else {
 						const params = new URLSearchParams(
 							new FormData(el) as unknown as string,
 						);
 						htswapUpdate(
-							el.getAttribute("data-htswap-target") || undefined,
-							el.getAttribute("data-htswap-history") || undefined,
-							action + (action.includes("?") ? "&" : "?") + params,
+							target,
+							historyMode,
+							url + (url.includes("?") ? "&" : "?") + params,
+							mode,
 						);
 					}
 				};
@@ -84,8 +104,9 @@ export function htswapInit() {
 		subtree: true,
 	});
 	window.addEventListener("popstate", (e) =>
-		htswapUpdate(e.state?.target, "none"),
+		htswapUpdate(e.state?.target, "none", undefined, undefined, e.state?.mode),
 	);
+	console.info("htswap: initialized");
 }
 
 htswapInit();
