@@ -135,7 +135,6 @@ The following modes are available:
 
 - `outerHTML`: The default mode, which replaces the entire target element with the new content.
 - `innerHTML`: Replaces the inner content of the target element with the new content.
-type InsertPosition = "afterbegin" | "afterend" | "beforebegin" | "beforeend";
 - `afterbegin`: Inserts the new content inside the target element, as the first child.
 - `afterend`: Inserts the new content inside the target element, as the last child.
 - `beforebegin`: Inserts the new content as sibling of the target element, before it.
