@@ -1,3 +1,11 @@
+# 🔄 htswap
+
+**Minimal, lightweight script for seamless AJAX-style UI content swapping.** By importing `htswap`, and adding a `data-htswap` attribute, your anchors and forms get the speed of client-side-rendering in your server-side-rendered/static sites.
+
+Based on **Swap.js**, and inspired by **HTMZ**, **HTMX**, **Alpine-Ajax**, among others. A modern, smaller, more semantic alternative.
+
+<br>
+
 [
 ![NPM Version](https://img.shields.io/npm/v/htswap?style=flat-square&color=lightsalmon&label=htswap)
 ![jsDelivr hits (npm)](https://img.shields.io/jsdelivr/npm/hw/htswap?style=flat-square&label=CDN%20Hits&color=khaki)
@@ -5,14 +13,7 @@
 ![npm package minimized gzipped size](https://img.shields.io/bundlejs/size/htswap?style=flat-square&label=Size%20(gzip)&color=wheat)
 ](https://www.npmjs.com/package/htswap)
 
-# 🔄 htswap
-
-**Minimal, lightweight script for seamless AJAX-style UI content swapping.** By importing `htswap`, and adding a `data-htswap` attribute, your anchors and forms get the speed of client-side-rendering in your server-side-rendered/static sites.
-
-Based on **Swap.js**, and inspired by **HTMZ**, **HTMX**, **Alpine-Ajax**, among others. A modern, smaller, more semantic alternative.
-
-> [!WARNING]  
-> Expect breaking changes until v1.
+<br>
 
 ## ✴️️ Features
 
