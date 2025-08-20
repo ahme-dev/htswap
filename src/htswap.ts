@@ -12,30 +12,41 @@ export async function htswapUpdate(
 		| string = "replace",
 	body?: FormData,
 ) {
-	target.split(",").forEach(async (targ) => {
-		const currentTargetEl = document.querySelector(targ);
-		currentTargetEl?.setAttribute("aria-busy", "true");
+	const currenTargElements = target
+		.split(",")
+		.map((t) => ({
+			selector: t.trim(),
+			element: document.querySelector(t.trim()),
+		}))
+		.filter(({ element }) => element);
 
-		try {
-			const controller = new AbortController();
-			setTimeout(() => controller.abort(), 5e3);
-			const response = await fetch(url, {
-				headers: { "htswap-target": targ },
-				method: body ? "POST" : "GET",
-				signal: controller.signal,
-				body,
-			}).then((r) => r.text());
-			const newDoc = new DOMParser().parseFromString(response, "text/html");
-			const newTargetEl = newDoc.querySelector(targ);
+	currenTargElements.forEach(({ element }) =>
+		element?.setAttribute("aria-busy", "true"),
+	);
 
-			if (!newTargetEl || !currentTargetEl)
-				throw new Error(`Target "${targ}" not found`);
+	try {
+		const controller = new AbortController();
+		setTimeout(() => controller.abort(), 5e3);
+		const response = await fetch(url, {
+			headers: { "htswap-target": target },
+			method: body ? "POST" : "GET",
+			signal: controller.signal,
+			body,
+		}).then((r) => r.text());
 
-			if (mode === "update") currentTargetEl.innerHTML = newTargetEl.innerHTML;
-			else if (mode === "replace")
-				currentTargetEl.outerHTML = newTargetEl.outerHTML;
+		const newDoc = new DOMParser().parseFromString(response, "text/html");
+
+		currenTargElements.forEach(({ selector, element }) => {
+			const newTargetEl = newDoc.querySelector(selector);
+			if (!newTargetEl || !element) {
+				console.error(`Target "${selector}" not found`);
+				return;
+			}
+
+			if (mode === "update") element.innerHTML = newTargetEl.innerHTML;
+			else if (mode === "replace") element.outerHTML = newTargetEl.outerHTML;
 			else {
-				currentTargetEl.insertAdjacentHTML(
+				element.insertAdjacentHTML(
 					mode === "prepend"
 						? "afterbegin"
 						: mode === "append"
@@ -46,17 +57,19 @@ export async function htswapUpdate(
 					newTargetEl.innerHTML,
 				);
 			}
+		});
 
-			if (historyMode === "push") {
-				history.pushState({ target: targ, mode }, "", url);
-			} else if (historyMode === "replace") {
-				history.replaceState({ target: targ, mode }, "", url);
-			}
-		} catch (e) {
-			currentTargetEl?.setAttribute("aria-busy", "false");
-			console.error(`htswap: ${e}`);
+		if (historyMode === "push") {
+			history.pushState({ target, mode }, "", url);
+		} else if (historyMode === "replace") {
+			history.replaceState({ target, mode }, "", url);
 		}
-	});
+	} catch (e) {
+		currenTargElements.forEach(({ element }) =>
+			element?.setAttribute("aria-busy", "false"),
+		);
+		console.error(`htswap: ${e}`);
+	}
 }
 
 export function htswapLock() {
@@ -71,7 +84,9 @@ export function htswapLock() {
 			const historyMode = el.getAttribute("data-htswap-history") || undefined;
 			const mode = el.getAttribute("data-htswap-mode") || undefined;
 			const url =
-				el.getAttribute("action") || el.getAttribute("href") || location.href;
+				(el as HTMLFormElement).action ||
+				(el as HTMLAnchorElement).href ||
+				location.href;
 
 			if (el instanceof HTMLAnchorElement) {
 				el.onclick = (e: MouseEvent) => {
@@ -84,13 +99,12 @@ export function htswapLock() {
 					if (el.method.toUpperCase() === "POST") {
 						htswapUpdate(target, historyMode, url, mode, new FormData(el));
 					} else {
-						const params = new URLSearchParams(
-							new FormData(el) as unknown as string,
-						);
 						htswapUpdate(
 							target,
 							historyMode,
-							url + (url.includes("?") ? "&" : "?") + params,
+							url +
+								(url.includes("?") ? "&" : "?") +
+								new URLSearchParams(new FormData(el) as unknown as string),
 							mode,
 						);
 					}
@@ -108,7 +122,6 @@ export function htswapInit() {
 	window.addEventListener("popstate", (e) =>
 		htswapUpdate(e.state?.target, "none", undefined, undefined, e.state?.mode),
 	);
-	console.info("htswap: initialized");
 }
 
 htswapInit();
