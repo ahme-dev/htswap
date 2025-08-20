@@ -55,27 +55,29 @@ The attribute can be added on the `body` element to enable `htswap` on all the l
 Anchors automatically replace the whole page, replicating client-side behaviour. The `href` will determine which page to fetch for swapping.
 
 ```html
-<!-- on home page (/) -->
-<nav data-htswap>
-	<ul>
-		<li>
-			<a href="/account">Account</a>
-		</li>
-	</ul>
-</nav>
+<body data-htswap>
+	<nav>
+		<a href="/login">Login</a>
+		<a href="/signup">Sign Up</a>
+		<a href="/contact">Contact</a>
+	</nav>
+	<main>
+		<!-- Page content -->
+	</main>
+</body>
 ```
 
 They can be further enhanced by adding `data-htswap` on them and giving it a target, determining which element to swap dynamically, rather than using the whole page.
 
 ```html
-<!-- on dashboard users page (/dashboard/users) -->
 <div>
-	<aside>
-		<a href="/dashboard/users" data-htswap="#dashboard-content">Users</a>
-		<a href="/dashboard/products" data-htswap="#dashboard-content">Products</a>
-	</aside>
-	<main id="dashboard-content">
-		<!-- Content gets swapped here -->
+	<nav>
+		<a href="/posts" data-htswap="#content">All Posts</a>
+		<a href="/posts?category=tech" data-htswap="#content">Tech</a>
+		<a href="/posts?category=design" data-htswap="#content">Design</a>
+	</nav>
+	<main id="content">
+		<!-- Post list -->
 	</main>
 </div>
 ```
@@ -89,17 +91,19 @@ All swapping operations work with **browser history**, and navigating backward w
 Forms are also automatically enhanced and support targetting. And they will add their inputs as URL or body params when swapping, allowing the server to take actions according to the current state of the form.
 
 ```html
-<!-- on search page (/products) -->
 <div>
-	<form action="/products" data-htswap="#list" method="get">
-		<input type="text" name="product-name" id="product-name" placeholder="Search products...">
+	<form action="/search" data-htswap="#results" method="get">
+		<input type="text" name="q" placeholder="Search articles...">
+		<select name="category">
+			<option value="">All Categories</option>
+			<option value="news">News</option>
+			<option value="reviews">Reviews</option>
+		</select>
 		<button type="submit">Search</button>
 	</form>
-	<ul id="list">
-		<li>PC Gaming Controller</li>
-		<li>24 Inch Monitor</li>
-		<li>Gaming Chair</li>
-	</ul>
+	<div id="results">
+		<!-- Article list -->
+	</div>
 </div>
 ```
 
@@ -109,17 +113,20 @@ Multiple targets can be specified by separating them with a comma, with full sup
 
 ```html
 <div>
-	<nav>
-		<h2 id="nav-username">
-			Example Name
-		</h2>
-	</nav>
+	<header>
+		<span id="cart-count">3 items</span>
+	</header>
 
-	<h2 id="page-username">
-		Example Name
-	</h2>
+	<main>
+		<div id="product-list">
+			<!-- Product cards -->
+		</div>
+	</main>
 
-	<a href="/get-username" data-htswap="#page-username, #nav-username">Search</a>
+	<form action="/add-to-cart" data-htswap="#product-list, #cart-count" method="post">
+		<input type="hidden" name="product_id" value="123">
+		<button type="submit">Add to Cart</button>
+	</form>
 </div>	
 ```
 
@@ -133,7 +140,8 @@ Several modes of interacting with history are supported, with `push` being the d
 
 ```html
 <div>
-	<a href="/search" data-htswap="#list" data-hthistory="replace">Search</a>
+	<a href="/settings" data-htswap="#settings-panel" data-hthistory="none">Edit Profile</a>
+	<div id="settings-panel"></div>
 </div>
 ```
 
@@ -143,12 +151,11 @@ The `data-htswap` attribute can include specific merge modes, using the `@` symb
 
 ```html
 <div>
-	<a href="/search" data-htswap="#list@afterend">Search</a>
-	<ul id="list">
-		<li>P1</li>
-		<li>P2</li>
-		<li>P3</li>
-	</ul>
+	<div id="comments">
+		<div class="comment">First comment</div>
+		<div class="comment">Second comment</div>
+	</div>
+	<a href="/comments/load-more" data-htswap="#comments@beforeend">Load More Comments</a>
 </div>
 ```
 
@@ -168,11 +175,14 @@ The `->` symbol can be used to specify an alias for the target element, which wi
 
 ```html
 <div>
-	<a href="/search" data-htswap="#search-results->#list">Search</a>
-	<ul id="list">
-		<li>P1</li>
-		<li>P2</li>
-		<li>P3</li>
+	<form action="/filter-products" data-htswap="#server-results->#client-list" method="get">
+		<input type="text" name="brand" placeholder="Filter by brand...">
+		<button type="submit">Filter</button>
+	</form>
+	<ul id="client-list">
+		<li>iPhone 15</li>
+		<li>Samsung Galaxy</li>
+		<li>Google Pixel</li>
 	</ul>
 </div>
 ```
@@ -184,8 +194,9 @@ The `->` symbol can be used to specify an alias for the target element, which wi
 Individual elements under `data-htswap` can be opted out of swapping, using `data-htlocked`.
 
 ```html
-<div>
-	<a href="/content" data-htswap="#content" data-htlocked>Iframe</a>
+<div data-htswap>
+	<!-- Prepared but set to act as native anchor for now -->
+	<a href="/products" data-htswap="#product-list" data-htlocked>Products</a>
 </div>
 ```
 
