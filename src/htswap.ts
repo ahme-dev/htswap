@@ -7,23 +7,30 @@ export async function htswapUpdate(
 	const currentTargetEl = document.querySelector(target);
 	currentTargetEl?.setAttribute("aria-busy", "true");
 
-	const response = await fetch(url, {
-		headers: { "htswap-target": target },
-		method: body ? "POST" : "GET",
-		body,
-	}).then((r) => r.text());
-	const newDoc = new DOMParser().parseFromString(response, "text/html");
-	const newTargetEl = newDoc.querySelector(target);
+	try {
+		const controller = new AbortController();
+		setTimeout(() => controller.abort(), 5e3);
+		const response = await fetch(url, {
+			headers: { "htswap-target": target },
+			method: body ? "POST" : "GET",
+			signal: controller.signal,
+			body,
+		}).then((r) => r.text());
+		const newDoc = new DOMParser().parseFromString(response, "text/html");
+		const newTargetEl = newDoc.querySelector(target);
 
-	if (!newTargetEl || !currentTargetEl) {
-		return console.error(`HTSWAP: Target "${target}" not found`);
-	}
+		if (!newTargetEl || !currentTargetEl)
+			throw new Error(`Target "${target}" not found`);
 
-	currentTargetEl.outerHTML = newTargetEl.outerHTML;
-	if (historyMode === "push") {
-		history.pushState({ target }, "", url);
-	} else if (historyMode === "replace") {
-		history.replaceState({ target }, "", url);
+		currentTargetEl.outerHTML = newTargetEl.outerHTML;
+		if (historyMode === "push") {
+			history.pushState({ target }, "", url);
+		} else if (historyMode === "replace") {
+			history.replaceState({ target }, "", url);
+		}
+	} catch (e) {
+		currentTargetEl?.setAttribute("aria-busy", "false");
+		console.error(`htswap: ${e}`);
 	}
 }
 
