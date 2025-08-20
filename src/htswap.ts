@@ -12,49 +12,51 @@ export async function htswapUpdate(
 		| string = "replace",
 	body?: FormData,
 ) {
-	const currentTargetEl = document.querySelector(target);
-	currentTargetEl?.setAttribute("aria-busy", "true");
+	target.split(",").forEach(async (targ) => {
+		const currentTargetEl = document.querySelector(targ);
+		currentTargetEl?.setAttribute("aria-busy", "true");
 
-	try {
-		const controller = new AbortController();
-		setTimeout(() => controller.abort(), 5e3);
-		const response = await fetch(url, {
-			headers: { "htswap-target": target },
-			method: body ? "POST" : "GET",
-			signal: controller.signal,
-			body,
-		}).then((r) => r.text());
-		const newDoc = new DOMParser().parseFromString(response, "text/html");
-		const newTargetEl = newDoc.querySelector(target);
+		try {
+			const controller = new AbortController();
+			setTimeout(() => controller.abort(), 5e3);
+			const response = await fetch(url, {
+				headers: { "htswap-target": targ },
+				method: body ? "POST" : "GET",
+				signal: controller.signal,
+				body,
+			}).then((r) => r.text());
+			const newDoc = new DOMParser().parseFromString(response, "text/html");
+			const newTargetEl = newDoc.querySelector(targ);
 
-		if (!newTargetEl || !currentTargetEl)
-			throw new Error(`Target "${target}" not found`);
+			if (!newTargetEl || !currentTargetEl)
+				throw new Error(`Target "${targ}" not found`);
 
-		if (mode === "update") currentTargetEl.innerHTML = newTargetEl.innerHTML;
-		else if (mode === "replace")
-			currentTargetEl.outerHTML = newTargetEl.outerHTML;
-		else {
-			currentTargetEl.insertAdjacentHTML(
-				mode === "prepend"
-					? "afterbegin"
-					: mode === "append"
-						? "beforeend"
-						: mode === "before"
-							? "beforebegin"
-							: "afterend",
-				newTargetEl.innerHTML,
-			);
+			if (mode === "update") currentTargetEl.innerHTML = newTargetEl.innerHTML;
+			else if (mode === "replace")
+				currentTargetEl.outerHTML = newTargetEl.outerHTML;
+			else {
+				currentTargetEl.insertAdjacentHTML(
+					mode === "prepend"
+						? "afterbegin"
+						: mode === "append"
+							? "beforeend"
+							: mode === "before"
+								? "beforebegin"
+								: "afterend",
+					newTargetEl.innerHTML,
+				);
+			}
+
+			if (historyMode === "push") {
+				history.pushState({ target: targ, mode }, "", url);
+			} else if (historyMode === "replace") {
+				history.replaceState({ target: targ, mode }, "", url);
+			}
+		} catch (e) {
+			currentTargetEl?.setAttribute("aria-busy", "false");
+			console.error(`htswap: ${e}`);
 		}
-
-		if (historyMode === "push") {
-			history.pushState({ target, mode }, "", url);
-		} else if (historyMode === "replace") {
-			history.replaceState({ target, mode }, "", url);
-		}
-	} catch (e) {
-		currentTargetEl?.setAttribute("aria-busy", "false");
-		console.error(`htswap: ${e}`);
-	}
+	});
 }
 
 export function htswapLock() {

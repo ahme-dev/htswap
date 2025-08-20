@@ -77,6 +77,39 @@ describe("Links", async () => {
 		await delay(10);
 		expect(document.querySelector("#content")?.textContent).toEqual("Original");
 	});
+
+	test("Should swap multiple targets if specified", async () => {
+		setupEnvironment(
+			`
+			<div data-htswap>
+				<a id="go" href="/new" data-htswap-target="#target, #target2">
+					Go
+				</a>
+				<div id="target">Original</div>
+				<div id="target2">Original</div>
+			</div>
+			`,
+			{
+				"/new": () =>
+					'<div id="target">1 Updated by swapInit</div> <div id="target2">2 Updated by swapInit</div>',
+			},
+		);
+
+		const { htswapInit } = await import("../src/htswap.ts");
+
+		htswapInit();
+
+		click("#go");
+
+		await delay(10);
+
+		expect(document.querySelector("#target")?.textContent).toEqual(
+			"1 Updated by swapInit",
+		);
+		expect(document.querySelector("#target2")?.textContent).toEqual(
+			"2 Updated by swapInit",
+		);
+	});
 });
 
 describe("Forms", async () => {
