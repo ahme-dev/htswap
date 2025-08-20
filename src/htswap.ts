@@ -1,22 +1,22 @@
 export async function htswapUpdate(
 	target: string = "body",
+	fromTarget?: string,
 	historyMode: "replace" | "push" | "none" | string = "push",
 	url: string = location.href,
 	body?: FormData,
 ) {
-	const currenTargElements = target
-		.split(",")
-		.map((t) => {
-			const [selector, mergeMode = "outerHTML"] = t.split("@");
-			return {
-				selector,
-				element: document.querySelector(selector) as Element,
-				mergeMode: mergeMode as InsertPosition | "outerHTML" | "innerHTML",
-			};
-		})
-		.filter(({ element }) => element);
+	const fromTargets = (fromTarget || target).split(",");
+	const currentTargElements = target.split(",").map((t, index) => {
+		const [toSelector, mergeMode = "outerHTML"] = t.split("@");
+		const fromSelector = fromTargets[index].split("@")[0] || toSelector;
+		return {
+			from: fromSelector,
+			element: document.querySelector(toSelector) as Element,
+			mergeMode: mergeMode as InsertPosition | "outerHTML" | "innerHTML",
+		};
+	});
 
-	currenTargElements.forEach(({ element }) =>
+	currentTargElements.forEach(({ element }) =>
 		element?.setAttribute("aria-busy", "true"),
 	);
 
@@ -30,12 +30,13 @@ export async function htswapUpdate(
 			body,
 		}).then((r) => r.text());
 
-		currenTargElements.forEach(({ selector, element, mergeMode }) => {
+		currentTargElements.forEach(({ element, mergeMode, from }) => {
+			if (!element) return console.error(`htswap: "${from}" not in document`);
 			const newTargetEl = new DOMParser()
 				.parseFromString(response, "text/html")
-				.querySelector(selector);
+				.querySelector(from);
 			if (!newTargetEl) {
-				return console.error(`htswap: "${selector}" not in response`);
+				return console.error(`htswap: "${from}" not in response`);
 			}
 
 			if (mergeMode === "outerHTML") element.outerHTML = newTargetEl.outerHTML;
@@ -44,11 +45,12 @@ export async function htswapUpdate(
 			else element.insertAdjacentHTML(mergeMode, newTargetEl.innerHTML);
 		});
 
-		if (historyMode === "push") history.pushState({ target }, "", url);
+		if (historyMode === "push")
+			history.pushState({ target, fromTarget }, "", url);
 		else if (historyMode === "replace")
-			history.replaceState({ target }, "", url);
+			history.replaceState({ target, fromTarget }, "", url);
 	} catch (e) {
-		currenTargElements.forEach(({ element }) =>
+		currentTargElements.forEach(({ element }) =>
 			element?.setAttribute("aria-busy", "false"),
 		);
 		console.error(`htswap: ${e}`);
@@ -64,6 +66,7 @@ export function htswapLock() {
 			el.setAttribute("data-htlocked", "true");
 
 			const target = el.getAttribute("data-htswap") || undefined;
+			const fromTarget = el.getAttribute("data-htfrom") || undefined;
 			const historyMode = el.getAttribute("data-hthistory") || undefined;
 			const url =
 				(el as HTMLFormElement).action ||
@@ -73,13 +76,14 @@ export function htswapLock() {
 			if (el instanceof HTMLAnchorElement) {
 				el.onclick = (e: MouseEvent) => {
 					e.preventDefault();
-					htswapUpdate(target, historyMode, url);
+					htswapUpdate(target, fromTarget, historyMode, url);
 				};
 			} else if (el instanceof HTMLFormElement) {
 				el.onsubmit = (e: Event) => {
 					e.preventDefault();
 					htswapUpdate(
 						target,
+						fromTarget,
 						historyMode,
 						el.method.toUpperCase() === "POST"
 							? url
@@ -100,7 +104,7 @@ export function htswapInit() {
 		subtree: true,
 	});
 	window.addEventListener("popstate", (e) =>
-		htswapUpdate(e.state?.target, "none"),
+		htswapUpdate(e.state?.target, e.state?.fromTarget, "none"),
 	);
 }
 

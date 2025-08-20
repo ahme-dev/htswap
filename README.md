@@ -102,6 +102,26 @@ Forms are also automatically enhanced and support targetting. And they will add 
 </div>
 ```
 
+### Multiple Targets
+
+Multiple targets can be specified by separating them with a comma, with full support for query selectors.
+
+```html
+<div>
+	<nav>
+		<h2 id="nav-username">
+			Example Name
+		</h2>
+	</nav>
+
+	<h2 id="page-username">
+		Example Name
+	</h2>
+
+	<a href="/get-username" data-htswap="#page-username, #nav-username">Search</a>
+</div>	
+```
+
 ### History
 
 Several modes of interacting with history are supported, with `push` being the default.
@@ -140,6 +160,21 @@ The following modes are available:
 - `beforebegin`: Inserts the new content as sibling of the target element, before it.
 - `beforeend`: Inserts the new content as sibling of the target element, after it.
 
+### Target Aliases
+
+The `data-htfrom` attribute can be used to specify an alias for the target element, which will be used on the response document, and mapped to the target element on the client side.
+
+```html
+<div>
+	<a href="/search" data-htswap="#list" data-htfrom="#search-results">Search</a>
+	<ul id="list">
+		<li>P1</li>
+		<li>P2</li>
+		<li>P3</li>
+	</ul>
+</div>
+```
+
 ### More
 
 #### Locking
@@ -169,7 +204,7 @@ With this section being personal reasoning, I'll first go through similar librar
 
 Your usecase or preference might align with one of the above, but I needed `htswap`, which:
 
-- Doesn't hit 1kb (gzipped) in size.
+- Doesn't hit 999b (gzipped) in size.
 - Doesn't include anything more than enhancements for anchors/forms.
 - Doesn't break existing anchor/form functionality.
 - Doesn't force you to use its aproach for client-side interactivity.

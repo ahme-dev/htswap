@@ -193,6 +193,45 @@ describe("Links", async () => {
 		);
 	});
 
+	test("Should swap with aliases if specified", async () => {
+		setupEnvironment(
+			`
+			<div>
+				<a id="go" href="/new" data-htswap="#targ1, #targ2" data-htfrom="#el1, #el2">
+					Go
+				</a>
+
+				<div id="targ1">The first target</div>
+				<div id="targ2">The second target</div>
+			</div>
+			`,
+			{
+				"/new": () =>
+					`
+					<div>
+						<div id="el1">The first element</div>
+						<div id="el2">The second element</div>
+					</dvi>
+					`,
+			},
+		);
+
+		const { htswapInit } = await import("../src/htswap.ts");
+
+		htswapInit();
+
+		click("#go");
+
+		await delay(10);
+
+		expect(document.querySelector("#el1")?.textContent).toEqual(
+			"The first element",
+		);
+		expect(document.querySelector("#el2")?.textContent).toEqual(
+			"The second element",
+		);
+	});
+
 	test("Should swap according to merge modes", async () => {
 		setupEnvironment(
 			`
