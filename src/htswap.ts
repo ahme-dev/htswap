@@ -7,11 +7,11 @@ export async function htswapUpdate(
 	const currenTargElements = target
 		.split(",")
 		.map((t) => {
-			const [selector, mergeMode = "replace"] = t.split("@");
+			const [selector, mergeMode = "outerHTML"] = t.split("@");
 			return {
 				selector,
 				element: document.querySelector(selector) as Element,
-				mergeMode: mergeMode as InsertPosition & ("replace" | "update"),
+				mergeMode: mergeMode as InsertPosition | "outerHTML" | "innerHTML",
 			};
 		})
 		.filter(({ element }) => element);
@@ -38,9 +38,9 @@ export async function htswapUpdate(
 				return console.error(`htswap: "${selector}" not in response`);
 			}
 
-			if (mergeMode === "update") element.innerHTML = newTargetEl.innerHTML;
-			else if (mergeMode === "replace")
-				element.outerHTML = newTargetEl.outerHTML;
+			if (mergeMode === "outerHTML") element.outerHTML = newTargetEl.outerHTML;
+			else if (mergeMode === "innerHTML")
+				element.innerHTML = newTargetEl.innerHTML;
 			else element.insertAdjacentHTML(mergeMode, newTargetEl.innerHTML);
 		});
 

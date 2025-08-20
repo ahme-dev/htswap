@@ -116,6 +116,31 @@ Several modes of interacting with history are supported, with `push` being the d
 </div>
 ```
 
+### Merge Modes
+
+The `data-htswap` attribute can include specific merge modes, using the `@` symbol, to determine how the content is inserted into the target.
+
+```html
+<div>
+	<a href="/search" data-htswap="#list@afterend">Search</a>
+	<ul id="list">
+		<li>P1</li>
+		<li>P2</li>
+		<li>P3</li>
+	</ul>
+</div>
+```
+
+The following modes are available:
+
+- `outerHTML`: The default mode, which replaces the entire target element with the new content.
+- `innerHTML`: Replaces the inner content of the target element with the new content.
+type InsertPosition = "afterbegin" | "afterend" | "beforebegin" | "beforeend";
+- `afterbegin`: Inserts the new content inside the target element, as the first child.
+- `afterend`: Inserts the new content inside the target element, as the last child.
+- `beforebegin`: Inserts the new content as sibling of the target element, before it.
+- `beforeend`: Inserts the new content as sibling of the target element, after it.
+
 ### More
 
 #### Locking
