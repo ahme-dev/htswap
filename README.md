@@ -162,11 +162,11 @@ The following modes are available:
 
 ### Target Aliases
 
-The `data-htfrom` attribute can be used to specify an alias for the target element, which will be used on the response document, and mapped to the target element on the client side.
+The `->` symbol can be used to specify an alias for the target element, which will be used on the response document, and mapped to the target element on the client side.
 
 ```html
 <div>
-	<a href="/search" data-htswap="#list" data-htfrom="#search-results">Search</a>
+	<a href="/search" data-htswap="#search-results->#list">Search</a>
 	<ul id="list">
 		<li>P1</li>
 		<li>P2</li>

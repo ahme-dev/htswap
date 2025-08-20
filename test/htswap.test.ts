@@ -197,7 +197,7 @@ describe("Links", async () => {
 		setupEnvironment(
 			`
 			<div>
-				<a id="go" href="/new" data-htswap="#targ1, #targ2" data-htfrom="#el1, #el2">
+				<a id="go" href="/new" data-htswap="#el1->#targ1, #el2->#targ2">
 					Go
 				</a>
 

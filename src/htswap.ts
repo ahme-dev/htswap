@@ -1,17 +1,15 @@
 export async function htswapUpdate(
 	target: string = "body",
-	fromTarget?: string,
 	historyMode: "replace" | "push" | "none" | string = "push",
 	url: string = location.href,
 	body?: FormData,
 ) {
-	const fromTargets = (fromTarget || target).split(",");
-	const currentTargElements = target.split(",").map((t, index) => {
-		const [toSelector, mergeMode = "outerHTML"] = t.split("@");
-		const fromSelector = fromTargets[index].split("@")[0] || toSelector;
+	const currentTargElements = target.split(",").map((t) => {
+		const [selector, mergeMode = "outerHTML"] = t.split("@");
+		const [from, to] = selector.split("->");
 		return {
-			from: fromSelector,
-			element: document.querySelector(toSelector) as Element,
+			from: from || selector,
+			element: document.querySelector(to || selector) as Element,
 			mergeMode: mergeMode as InsertPosition | "outerHTML" | "innerHTML",
 		};
 	});
@@ -45,10 +43,9 @@ export async function htswapUpdate(
 			else element.insertAdjacentHTML(mergeMode, newTargetEl.innerHTML);
 		});
 
-		if (historyMode === "push")
-			history.pushState({ target, fromTarget }, "", url);
+		if (historyMode === "push") history.pushState({ target }, "", url);
 		else if (historyMode === "replace")
-			history.replaceState({ target, fromTarget }, "", url);
+			history.replaceState({ target }, "", url);
 	} catch (e) {
 		currentTargElements.forEach(({ element }) =>
 			element?.setAttribute("aria-busy", "false"),
@@ -66,7 +63,6 @@ export function htswapLock() {
 			el.setAttribute("data-htlocked", "true");
 
 			const target = el.getAttribute("data-htswap") || undefined;
-			const fromTarget = el.getAttribute("data-htfrom") || undefined;
 			const historyMode = el.getAttribute("data-hthistory") || undefined;
 			const url =
 				(el as HTMLFormElement).action ||
@@ -76,14 +72,13 @@ export function htswapLock() {
 			if (el instanceof HTMLAnchorElement) {
 				el.onclick = (e: MouseEvent) => {
 					e.preventDefault();
-					htswapUpdate(target, fromTarget, historyMode, url);
+					htswapUpdate(target, historyMode, url);
 				};
 			} else if (el instanceof HTMLFormElement) {
 				el.onsubmit = (e: Event) => {
 					e.preventDefault();
 					htswapUpdate(
 						target,
-						fromTarget,
 						historyMode,
 						el.method.toUpperCase() === "POST"
 							? url
@@ -104,7 +99,7 @@ export function htswapInit() {
 		subtree: true,
 	});
 	window.addEventListener("popstate", (e) =>
-		htswapUpdate(e.state?.target, e.state?.fromTarget, "none"),
+		htswapUpdate(e.state?.target, "none"),
 	);
 }
 
