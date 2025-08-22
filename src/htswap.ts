@@ -30,7 +30,10 @@ export async function htswapUpdate(
 			method: body ? "POST" : "GET",
 			signal: controller.signal,
 			body,
-		}).then((r) => r.text());
+		}).then((r) => {
+			if (r.ok) return r.text();
+			throw new Error(r.statusText);
+		});
 
 		currentTargElements.forEach(({ element, mergeMode, from }) => {
 			if (!element) return console.error(`htswap: "${from}" not in document`);
