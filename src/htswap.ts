@@ -1,114 +1,119 @@
+const cache = new Map<string, string>();
+
 export async function htswapUpdate(
-	target: string = "body",
-	historyMode: "replace" | "push" | "none" | string = "push",
-	url: string = location.href,
-	body?: FormData,
+	target: string,
+	url: string,
+	hist?: string,
+	body?: BodyInit,
+	preload?: boolean,
 ) {
-	const currentTargElements = target.split(",").map((t) => {
-		const [selector, mergeMode = "outerHTML"] = t.split("@");
-		const [from, to] = selector.split("->");
+	const targets = target.split(",").map((t) => {
+		const [sel, merge = "outerHTML"] = t.split("@");
+		const [from, to = from] = sel.split("->");
 		return {
-			from: from || selector,
-			element: document.querySelector(to || selector) as Element,
-			mergeMode: mergeMode as
-				| InsertPosition
-				| "outerHTML"
-				| "innerHTML"
-				| "remove",
-		} as const;
+			from,
+			to: document.querySelector(to),
+			merge: merge as "outerHTML" | "innerHTML" | "remove" | InsertPosition,
+		};
 	});
 
-	currentTargElements.forEach(({ element }) =>
-		element?.setAttribute("aria-busy", "true"),
-	);
+	targets.forEach((t) => t.to?.setAttribute("aria-busy", "true"));
 
 	try {
-		const controller = new AbortController();
-		setTimeout(() => controller.abort(), 5e3);
-		const response = await fetch(url, {
-			headers: { "x-htswap": target },
-			method: body ? "POST" : "GET",
-			signal: controller.signal,
-			body,
-		}).then((r) => {
-			if (r.ok) return r.text();
-			throw new Error(r.statusText);
+		let html = cache.get(url);
+		if (!html) {
+			const res = await fetch(url, {
+				method: body ? "POST" : "GET",
+				headers: { "x-htswap": target },
+				body,
+				signal: AbortSignal.timeout(5000),
+			});
+			html = await res.text();
+		}
+		if (html) cache.delete(url);
+		if (preload) {
+			cache.set(url, html);
+			return;
+		}
+
+		const doc = new DOMParser().parseFromString(html, "text/html");
+
+		targets.forEach(({ from, to, merge }) => {
+			if (!to) return;
+			const src = doc.querySelector(from);
+			if (!src) return;
+
+			if (merge === "outerHTML") to.outerHTML = src.outerHTML;
+			else if (merge === "innerHTML") to.innerHTML = src.innerHTML;
+			else if (merge === "remove") to.remove();
+			else to.insertAdjacentHTML(merge, src.innerHTML);
 		});
 
-		currentTargElements.forEach(({ element, mergeMode, from }) => {
-			if (!element) return console.error(`htswap: "${from}" not in document`);
-			const newTargetEl = new DOMParser()
-				.parseFromString(response, "text/html")
-				.querySelector(from);
-			if (!newTargetEl) {
-				return console.error(`htswap: "${from}" not in response`);
-			}
-
-			if (mergeMode === "outerHTML") element.outerHTML = newTargetEl.outerHTML;
-			else if (mergeMode === "innerHTML")
-				element.innerHTML = newTargetEl.innerHTML;
-			else if (mergeMode === "remove") element.remove();
-			else element.insertAdjacentHTML(mergeMode, newTargetEl.innerHTML);
-		});
-
-		if (historyMode === "push") history.pushState({ target }, "", url);
-		else if (historyMode === "replace")
-			history.replaceState({ target }, "", url);
+		if (!hist || hist === "push") history.pushState({ target }, "", url);
+		else if (hist === "replace") history.replaceState({ target }, "", url);
 	} catch (e) {
-		currentTargElements.forEach(({ element }) =>
-			element?.setAttribute("aria-busy", "false"),
-		);
 		console.error(`htswap: ${e}`);
+	} finally {
+		targets.forEach((t) => t.to?.setAttribute("aria-busy", "false"));
 	}
 }
 
-export function htswapLock() {
+export function htswapBind() {
 	document
 		.querySelectorAll(
-			"[data-htswap] form:not([data-htlocked]), [data-htswap] a:not([data-htlocked]), a[data-htswap]:not([data-htlocked]), form[data-htswap]:not([data-htlocked])",
+			"[data-htswap]:not([data-htbound])" +
+				",[data-htbind] a:not([data-htbound])" +
+				",[data-htbind] form:not([data-htbound])",
 		)
 		.forEach((el) => {
-			el.setAttribute("data-htlocked", "true");
+			el.setAttribute("data-htbound", "true");
+			const element = el as HTMLElement;
 
-			const target = el.getAttribute("data-htswap") || undefined;
-			const historyMode = el.getAttribute("data-hthistory") || undefined;
+			const target = element.dataset.htswap || "body";
+			const history = element.dataset.hthistory;
 			const url =
-				(el as HTMLFormElement).action ||
-				(el as HTMLAnchorElement).href ||
+				(element as HTMLFormElement).action ||
+				(element as HTMLAnchorElement).href ||
 				location.href;
 
-			if (el instanceof HTMLAnchorElement) {
-				el.onclick = (e: MouseEvent) => {
+			if (element instanceof HTMLFormElement) {
+				element.onsubmit = (e) => {
 					e.preventDefault();
-					htswapUpdate(target, historyMode, url);
-				};
-			} else if (el instanceof HTMLFormElement) {
-				el.onsubmit = (e: Event) => {
-					e.preventDefault();
+					const data = new FormData(element);
+					const method = element.method.toUpperCase();
+
 					htswapUpdate(
 						target,
-						historyMode,
-						el.method.toUpperCase() === "POST"
+						method === "POST"
 							? url
 							: url +
 									(url.includes("?") ? "&" : "?") +
-									new URLSearchParams(new FormData(el) as unknown as string),
-						new FormData(el),
+									new URLSearchParams(data as unknown as string),
+						history,
+						method === "POST" ? data : undefined,
 					);
+				};
+			} else {
+				if (element.hasAttribute("data-htpreload")) {
+					htswapUpdate(target, url, history, undefined, true);
+				}
+
+				element.onclick = (e) => {
+					e.preventDefault();
+					htswapUpdate(target, url, history);
 				};
 			}
 		});
 }
 
 export function htswapInit() {
-	htswapLock();
-	new MutationObserver(htswapLock).observe(document.documentElement, {
+	htswapBind();
+	new MutationObserver(htswapBind).observe(document.documentElement, {
 		childList: true,
 		subtree: true,
 	});
 	window.addEventListener("popstate", (e) =>
-		htswapUpdate(e.state?.target, "none"),
+		htswapUpdate(e.state?.target || "body", location.href, "none"),
 	);
 }
-
 htswapInit();

@@ -6,7 +6,7 @@ describe("Links", async () => {
 	test("Should swap with parent activated", async () => {
 		setupEnvironment(
 			`
-			<div data-htswap>
+			<div data-htbind>
 				<a id="go" href="/new">
 					Go
 				</a>
@@ -59,11 +59,11 @@ describe("Links", async () => {
 		);
 	});
 
-	test("Should not swap with locked specifiecd", async () => {
+	test("Should not swap with bound specifiecd", async () => {
 		setupEnvironment(
 			`
-			<div data-htswap>
-				<a id="go" href="/new" data-htlocked>
+			<div data-htbind>
+				<a id="go" href="/new" data-htbound>
 					Go
 				</a>
 				<div id="target">Original</div>
@@ -126,7 +126,7 @@ describe("Links", async () => {
 			{
 				"/page1": () => `
 					<div id="page">
-						<a id="go" href="/page2" data-htswap="#page">
+						<a id="go" href="/page2" data-htswap="#page" data-hthistory>
 							Go
 						</a>
 						<div id="content">Page1</div>
@@ -266,6 +266,44 @@ describe("Links", async () => {
 			`),
 		);
 	});
+
+	test("Should only fetch once if preloaded", async () => {
+		let fetchCount = 0;
+
+		setupEnvironment(
+			`
+			<div>
+				<a id="go" href="/new" data-htswap="#target" data-htpreload>
+					Go
+				</a>
+				<div id="target">Original</div>
+			</div>
+			`,
+			{
+				"/new": () => {
+					fetchCount++;
+					return '<div id="target">Updated by swapInit</div>';
+				},
+			},
+		);
+
+		const { htswapInit } = await import("../src/htswap.ts");
+
+		htswapInit();
+
+		await delay(10);
+
+		expect(fetchCount).toEqual(1);
+
+		click("#go");
+
+		await delay(10);
+
+		expect(document.querySelector("#target")?.textContent).toEqual(
+			"Updated by swapInit",
+		);
+		expect(fetchCount).toEqual(1);
+	});
 });
 
 describe("Forms", async () => {
@@ -286,6 +324,7 @@ describe("Forms", async () => {
 			`,
 			{
 				"/search": (params) => {
+					console.log(JSON.stringify(params as URLSearchParams).length);
 					const elements = ["P1", "P2", "P3"]
 						.filter((v) =>
 							v.includes((params as URLSearchParams)?.get("title") || ""),
