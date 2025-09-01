@@ -133,7 +133,7 @@ describe("Links", async () => {
 					</div>
 				`,
 				"/page2": () => `
-					<div id="page">
+					<div>
 						<div id="content">Page2</div>
 					</div>
 				`,
@@ -303,6 +303,46 @@ describe("Links", async () => {
 			"Updated by swapInit",
 		);
 		expect(fetchCount).toEqual(1);
+	});
+
+	test("Should allow scripts to work", async () => {
+		setupEnvironment(
+			`
+		<div>
+			<a id="load" href="/one" data-htswap="#target">
+			<div id="target">
+				<p>Original</p>
+			</div>
+		</div>
+		`,
+			{
+				"/one": () => {
+					return `
+					<div>
+						<div id="target">
+							<p>Hi</p>
+							<script>
+    						document.getElementById('target').setAttribute('data-script-ran', 'true');
+							</script>
+						</div>
+					</div>
+				`;
+				},
+			},
+		);
+		const { htswapInit } = await import("../src/htswap.ts");
+		htswapInit();
+		await delay(10);
+
+		expect(
+			document.querySelector("#target")?.getAttribute("data-script-ran"),
+		).toBeNull();
+		click("#load");
+		await delay(10);
+
+		expect(
+			document.querySelector("#target")?.getAttribute("data-script-ran"),
+		).toEqual("true");
 	});
 });
 

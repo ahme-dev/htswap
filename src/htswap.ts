@@ -12,12 +12,13 @@ export async function htswapUpdate(
 		const [from, to = from] = sel.split("->");
 		return {
 			from,
-			to: document.querySelector(to),
+			toEl: document.querySelector(to) || document.body,
+			to,
 			merge: merge as "outerHTML" | "innerHTML" | "remove" | InsertPosition,
 		};
 	});
 
-	targets.forEach((t) => t.to?.setAttribute("aria-busy", "true"));
+	targets.forEach((t) => t.toEl?.setAttribute("aria-busy", "true"));
 
 	try {
 		let html = cache.get(url);
@@ -38,15 +39,23 @@ export async function htswapUpdate(
 
 		const doc = new DOMParser().parseFromString(html, "text/html");
 
-		targets.forEach(({ from, to, merge }) => {
-			if (!to) return;
-			const src = doc.querySelector(from);
-			if (!src) return;
+		targets.forEach(({ from, toEl, to, merge }) => {
+			if (!toEl) return;
+			const fromEl = doc.querySelector(from) || doc.body;
+			if (!fromEl) return;
 
-			if (merge === "outerHTML") to.outerHTML = src.outerHTML;
-			else if (merge === "innerHTML") to.innerHTML = src.innerHTML;
-			else if (merge === "remove") to.remove();
-			else to.insertAdjacentHTML(merge, src.innerHTML);
+			if (merge === "outerHTML") toEl.outerHTML = fromEl.outerHTML;
+			else if (merge === "innerHTML") toEl.innerHTML = fromEl.innerHTML;
+			else if (merge === "remove") toEl.remove();
+			else toEl.insertAdjacentHTML(merge, fromEl.innerHTML);
+
+			const newToEl = document.querySelector(to);
+
+			newToEl?.querySelectorAll("script").forEach((s) => {
+				const n = document.createElement("script");
+				n.textContent = s.textContent;
+				s.replaceWith(n);
+			});
 		});
 
 		if (!hist || hist === "push") history.pushState({ target }, "", url);
@@ -54,7 +63,7 @@ export async function htswapUpdate(
 	} catch (e) {
 		console.error(`htswap: ${e}`);
 	} finally {
-		targets.forEach((t) => t.to?.setAttribute("aria-busy", "false"));
+		targets.forEach((t) => t.toEl?.setAttribute("aria-busy", "false"));
 	}
 }
 
