@@ -21,16 +21,14 @@ export async function htswapUpdate(
 	targets.forEach((t) => t.toEl?.setAttribute("aria-busy", "true"));
 
 	try {
-		let html = cache.get(url);
-		if (!html) {
-			const res = await fetch(url, {
+		const html =
+			(cache.get(url) as string) ||
+			(await fetch(url, {
 				method: body ? "POST" : "GET",
 				headers: { "x-htswap": target },
 				body,
 				signal: AbortSignal.timeout(5000),
-			});
-			html = await res.text();
-		}
+			}).then((r) => r.text()));
 		if (html) cache.delete(url);
 		if (preload) {
 			cache.set(url, html);
@@ -49,13 +47,14 @@ export async function htswapUpdate(
 			else if (merge === "remove") toEl.remove();
 			else toEl.insertAdjacentHTML(merge, fromEl.innerHTML);
 
-			const newToEl = document.querySelector(to);
-
-			newToEl?.querySelectorAll("script").forEach((s) => {
-				const n = document.createElement("script");
-				n.textContent = s.textContent;
-				s.replaceWith(n);
-			});
+			document
+				.querySelector(to)
+				?.querySelectorAll("script")
+				.forEach((s) => {
+					const n = document.createElement("script");
+					n.textContent = s.textContent;
+					s.replaceWith(n);
+				});
 		});
 
 		if (!hist || hist === "push") history.pushState({ target }, "", url);
@@ -76,40 +75,46 @@ export function htswapBind() {
 		)
 		.forEach((el) => {
 			el.setAttribute("data-htbound", "true");
-			const element = el as HTMLElement;
-
-			const target = element.dataset.htswap || "body";
-			const history = element.dataset.hthistory;
 			const url =
-				(element as HTMLFormElement).action ||
-				(element as HTMLAnchorElement).href ||
+				(el as HTMLFormElement).action ||
+				(el as HTMLAnchorElement).href ||
 				location.href;
 
-			if (element instanceof HTMLFormElement) {
-				element.onsubmit = (e) => {
+			if (el instanceof HTMLFormElement) {
+				el.onsubmit = (e) => {
 					e.preventDefault();
-					const data = new FormData(element);
-					const method = element.method.toUpperCase();
+					const data = new FormData(el);
+					const method = el.method.toUpperCase();
 
 					htswapUpdate(
-						target,
+						(el as HTMLElement).dataset.htswap || "body",
 						method === "POST"
 							? url
 							: url +
 									(url.includes("?") ? "&" : "?") +
 									new URLSearchParams(data as unknown as string),
-						history,
+						(el as HTMLElement).dataset.hthistory,
 						method === "POST" ? data : undefined,
 					);
 				};
 			} else {
-				if (element.hasAttribute("data-htpreload")) {
-					htswapUpdate(target, url, history, undefined, true);
+				if (el.hasAttribute("data-htpreload")) {
+					htswapUpdate(
+						(el as HTMLElement).dataset.htswap || "body",
+						url,
+						(el as HTMLElement).dataset.hthistory,
+						undefined,
+						true,
+					);
 				}
 
-				element.onclick = (e) => {
+				(el as HTMLElement).onclick = (e) => {
 					e.preventDefault();
-					htswapUpdate(target, url, history);
+					htswapUpdate(
+						(el as HTMLElement).dataset.htswap || "body",
+						url,
+						(el as HTMLElement).dataset.hthistory,
+					);
 				};
 			}
 		});
