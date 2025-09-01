@@ -217,7 +217,7 @@ With this section being personal reasoning, I'll first go through similar librar
 
 Your usecase or preference might align with one of the above, but I needed `htswap`, which:
 
-- Doesn't hit 999b (gzipped) in size.
+- Doesn't go above 1kb (gzipped) in size.
 - Doesn't include anything more than enhancements for anchors/forms.
 - Doesn't break existing anchor/form functionality.
 - Doesn't force you to use its aproach for client-side interactivity.
