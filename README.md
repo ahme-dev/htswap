@@ -191,10 +191,10 @@ The `->` symbol can be used to specify an alias for the target element, which wi
 
 #### Opt Out
 
-Individual elements under `data-htswap` can be opted out of swapping, using `data-htbound`.
+Individual elements under `data-htbind` can be opted out of swapping, using `data-htbound`.
 
 ```html
-<div data-htswap>
+<div data-htbind>
 	<!-- Prepared but set to act as native anchor for now -->
 	<a href="/products" data-htswap="#product-list" data-htbound>Products</a>
 </div>
