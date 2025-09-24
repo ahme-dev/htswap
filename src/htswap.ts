@@ -98,6 +98,8 @@ export function htswapBind() {
 					);
 				};
 			} else {
+				if (url.startsWith("#")) return;
+
 				if (el.hasAttribute("data-htpreload")) {
 					htswapUpdate(
 						(el as HTMLElement).dataset.htswap || "body",
