@@ -37,6 +37,10 @@ export async function htswapUpdate(
 
 		const doc = new DOMParser().parseFromString(html, "text/html");
 
+		const title = doc.querySelector("title");
+		if (title) {
+			document.querySelector("title")?.replaceWith(title);
+		}
 		targets.forEach(({ from, toEl, to, merge }) => {
 			if (!toEl) return;
 			const fromEl = doc.querySelector(from) || doc.body;
