@@ -23,12 +23,12 @@ export async function htswapUpdate(
 	try {
 		const html =
 			(cache.get(url) as string) ||
-			(await fetch(url, {
+			(await (await fetch(url, {
 				method: body ? "POST" : "GET",
 				headers: { "x-htswap": target },
 				body,
 				signal: AbortSignal.timeout(5000),
-			}).then((r) => r.text()));
+			})).text());
 		if (html) cache.delete(url);
 		if (preload) {
 			cache.set(url, html);
