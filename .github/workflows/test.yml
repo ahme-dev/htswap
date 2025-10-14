@@ -17,11 +17,13 @@ jobs:
         run: npm i -g pnpm
       - name: Install deps
         run: pnpm i
+      - name: Install Cypress binary
+        run: pnpm exec cypress install
       - name: Build
         run: pnpm run build
       - name: Run Cypress
         uses: cypress-io/github-action@v6
         with:
-          install-command: pnpm i
+          install: false
           build: pnpm run build
           command: pnpm run test:ci
