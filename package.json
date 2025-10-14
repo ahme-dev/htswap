@@ -48,6 +48,7 @@
 		"size": "size-limit",
 		"build": "tsdown",
 		"test": "cypress open --e2e",
+		"test:ci": "cypress run --e2e",
 		"prepublishOnly": "pnpm run build",
 		"fix": "biome check --write"
 	},
