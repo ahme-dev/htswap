@@ -47,13 +47,14 @@
 	"scripts": {
 		"size": "size-limit",
 		"build": "tsdown",
-		"test": "vitest run --dangerouslyIgnoreUnhandledErrors",
+		"test": "cypress open --e2e",
 		"prepublishOnly": "pnpm run build",
 		"fix": "biome check --write"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.0.6",
 		"@size-limit/preset-small-lib": "^11.2.0",
+		"cypress": "^15.1.0",
 		"jsdom": "^26.1.0",
 		"publint": "^0.3.12",
 		"size-limit": "^11.2.0",
