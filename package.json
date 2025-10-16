@@ -41,7 +41,7 @@
 		{
 			"path": "src/htswap.ts",
 			"gzip": true,
-			"limit": "999b"
+			"limit": "1999b"
 		}
 	],
 	"scripts": {

@@ -1,459 +1,1330 @@
-import {
-	initScript,
-	parseMultipartFormData,
-	type TMultipartFormDataReq,
-} from "../support/helpers";
+import { prepareHead } from "../support/helpers";
 
-describe("HTSwap Links", () => {
-	it("Should swap with parent activated", () => {
-		initScript().then((script) => {
-			cy.intercept("GET", "/", {
-				statusCode: 200,
-				body: `${script}<div data-htbind><a id='go' href='/new'>Go</a><div id='target'>Original</div></div>`,
-			});
-			cy.visit("/");
-
-			cy.intercept("GET", "/new", {
-				statusCode: 200,
-				body: '<div id="target">Updated by swapInit</div>',
-			}).as("getNew");
-
-			cy.get("#go").click();
-			cy.wait("@getNew");
-			cy.get("#target").should("contain.text", "Updated by swapInit");
-		});
-	});
-
-	it("Should swap with target not specified", () => {
-		initScript().then((script) => {
+describe("Dynamic Content", () => {
+	it("Should swap dynamically without page reload", () => {
+		prepareHead().then((head) => {
 			cy.intercept("GET", "/", {
 				statusCode: 200,
 				body: `
-					${script}
-					<div>
-						<a id="go" href="/new" data-htswap>Go</a>
-						<div id="target">Original</div>
-					</div>
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div data-htbind>
+							<a id='about-us' href='/about'>About Us</a>
+							<div id='target'>Original</div>
+						</div>
+					</body>
+				</html>
 				`,
 			});
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: '<div id="target">Updated</div>',
+			}).as("getAbout");
 			cy.visit("/");
 
-			cy.intercept("GET", "/new", {
-				statusCode: 200,
-				body: '<div id="target">Updated by swapInit</div>',
-			}).as("getNew");
-
-			cy.get("#go").click();
-			cy.wait("@getNew");
-			cy.get("#target").should("contain.text", "Updated by swapInit");
-		});
-	});
-
-	it("Should not swap with bound specified", () => {
-		initScript().then((script) => {
-			cy.intercept("GET", "/", {
-				statusCode: 200,
-				body: `
-					${script}
-					<div data-htbind>
-						<a id="go" href="/new" onclick="event.preventDefault();" data-htbound="true" data-htswap="#target">Go</a>
-						<div id="target">Original</div>
-					</div>
-				`,
-			});
-			cy.visit("/");
-
-			cy.intercept("GET", "/new", {
-				statusCode: 200,
-				body: '<div id="target">Updated by swapInit</div>',
-			}).as("getNew");
-
-			cy.get("#go").click().wait(100);
-			cy.get("#target").should("contain.text", "Original");
-		});
-	});
-
-	it("Should swap with target specified", () => {
-		initScript().then((script) => {
-			cy.intercept("GET", "/", {
-				statusCode: 200,
-				body: `
-					${script}
-					<div>
-						<a id="go" href="/new" data-htswap="#target">Go</a>
-						<p id="not-target">Unchanged</p>
-						<div id="target">Original</div>
-					</div>
-				`,
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
 			});
 
-			cy.visit("/");
-			cy.get("#go").should("have.attr", "data-htbound");
+			cy.get("#about-us").click();
+			cy.wait("@getAbout");
 
-			cy.intercept("GET", "/new", {
-				statusCode: 200,
-				body: '<div id="target">Updated by swapInit</div>',
-			}).as("getNew");
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
 
-			cy.get("#go").click();
-			cy.wait("@getNew");
-			cy.get("#target").should("contain.text", "Updated by swapInit");
-			cy.get("#not-target").should("contain.text", "Unchanged");
+			cy.get("#target").should("contain.text", "Updated");
 		});
 	});
 
-	it("Should swap with back button", () => {
-		initScript().then((script) => {
+	it("Should not swap dynamically without script", () => {
+		prepareHead().then(() => {
 			cy.intercept("GET", "/", {
 				statusCode: 200,
 				body: `
-				${script}
-				<div id="page">
-					<a id="go" href="/page1" data-htswap="#page">Go</a>
-					<div id="content">Original</div>
+				<!DOCTYPE html>
+				<html>
+					<head>
+						<script>window.__marker = Math.random();</script>
+					</head>
+					<body>
+						<div data-htbind>
+							<a id='about-us' href='/about'>About Us</a>
+							<div id='target'>Original</div>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: '<div id="target">Updated</div>',
+			}).as("getAbout");
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#about-us").click();
+			cy.wait("@getAbout");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.be
+					.undefined;
+			});
+
+			cy.get("#target").should("contain.text", "Updated");
+		});
+	});
+});
+
+describe("Progressive Enhancement", () => {
+	it("Should be able to opt in specific anchors/forms only", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div>
+							<nav>
+								<a id='about-us' data-htswap href='/about'>About Us</a>
+								<a id='contact' href='/contact'>Contact</a>
+							</nav>
+							<div id='target'>Welcome to the site!</div>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+				<div>
+					<nav>
+						<a id='about-us' href='/about'>About Us</a>
+						<a id='contact' href='/contact'>Contact</a>
+					</nav>
+					<div id="target">About</div>
 				</div>
 			`,
-			});
+			}).as("getAbout");
+			cy.intercept("GET", "/contact", {
+				statusCode: 200,
+				body: `
+				<div>
+					<nav>
+						<a id='about-us' href='/about'>About Us</a>
+						<a id='contact' href='/contact'>Contact</a>
+					</nav>
+					<div id="target">Contact</div>
+				</div>
+			`,
+			}).as("getContact");
+
 			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#about-us").click();
+			cy.wait("@getAbout");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+			cy.get("#target").should("contain.text", "About");
+
+			cy.get("#contact").click();
+			cy.wait("@getContact");
+
+			cy.window().should((win) => {
+				expect(
+					(win as typeof win & { __marker: number }).__marker,
+				).to.not.equal(initialMarker);
+			});
+			cy.get("#target").should("contain.text", "Contact");
+		});
+	});
+
+	it("Should be able to opt in sections", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div>
+							<nav data-htbind>
+								<a id='about-us' href='/about'>About Us</a>
+								<a id='contact' href='/contact'>Contact</a>
+							</nav>
+							<div id='target'>Welcome to the site!</div>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+				<div>
+					<nav data-htbind>
+						<a id='about-us' href='/about'>About Us</a>
+						<a id='contact' href='/contact'>Contact</a>
+					</nav>
+					<div id="target">About</div>
+				</div>
+			`,
+			}).as("getAbout");
+			cy.intercept("GET", "/contact", {
+				statusCode: 200,
+				body: `
+				<div>
+					<nav data-htbind>
+						<a id='about-us' href='/about'>About Us</a>
+						<a id='contact' href='/contact'>Contact</a>
+					</nav>
+					<div id="target">Contact</div>
+				</div>
+			`,
+			}).as("getContact");
+
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#about-us").click();
+			cy.wait("@getAbout");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+			cy.get("#target").should("contain.text", "About");
+
+			cy.get("#contact").click();
+			cy.wait("@getContact");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+			cy.get("#target").should("contain.text", "Contact");
+		});
+	});
+
+	it("Should be able to opt out specific anchors/forms", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div>
+							<nav data-htbind>
+								<a id='about-us' href='/about'>About Us</a>
+								<a data-htbound id='contact' href='/contact'>Contact</a>
+							</nav>
+							<div id='target'>Welcome to the site!</div>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+				<div>
+					<nav data-htbind>
+						<a id='about-us' href='/about'>About Us</a>
+						<a data-htbound id='contact' href='/contact'>Contact</a>
+					</nav>
+					<div id="target">About</div>
+				</div>
+			`,
+			}).as("getAbout");
+			cy.intercept("GET", "/contact", {
+				statusCode: 200,
+				body: `
+				<div>
+					<nav data-htbind>
+						<a id='about-us' href='/about'>About Us</a>
+						<a data-htbound id='contact' href='/contact'>Contact</a>
+					</nav>
+					<div id="target">Contact</div>
+				</div>
+			`,
+			}).as("getContact");
+
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#about-us").click();
+			cy.wait("@getAbout");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+			cy.get("#target").should("contain.text", "About");
+
+			cy.get("#contact").click();
+			cy.wait("@getContact");
+
+			cy.window().should((win) => {
+				expect(
+					(win as typeof win & { __marker: number }).__marker,
+				).not.to.equal(initialMarker);
+			});
+			cy.get("#target").should("contain.text", "Contact");
+		});
+	});
+});
+
+describe("Graceful Degradation", () => {
+	it("Should not break anchors/forms if there's no JS", () => {
+		prepareHead().then(() => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					<head></head>
+					<body>
+						<div>
+							<nav>
+								<a data-htswap="#target" data-htpreload id='about-us' href='/about'>About Us</a>
+								<a data-htswap="#target" data-hthistory="replace" id='contact' href='/contact'>Contact</a>
+							</nav>
+							<div id='target'>Welcome to the site!</div>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+        <div>
+					<nav>
+    	      <a data-htswap="#target" data-htpreload id='about-us' href='/about'>About Us</a>
+    	      <a data-htswap="#target" data-hthistory="replace" id='contact' href='/contact'>Contact</a>
+					</nav>
+          <div id='target'>About</div>
+        </div>
+      `,
+			}).as("getAbout");
+			cy.intercept("GET", "/contact", {
+				statusCode: 200,
+				body: `
+        <div>
+					<nav>
+    	      <a data-htswap="#target" data-htpreload id='about-us' href='/about'>About Us</a>
+    	      <a data-htswap="#target" data-hthistory="replace" id='contact' href='/contact'>Contact</a>
+					</nav>
+          <div id='target'>Contact</div>
+        </div>
+      `,
+			}).as("getContact");
+
+			cy.visit("/");
+
+			cy.get("#about-us").click();
+			cy.wait("@getAbout");
+
+			cy.get("#target").should("contain.text", "About");
+
+			cy.get("#contact").click();
+			cy.wait("@getContact");
+
+			cy.get("#target").should("contain.text", "Contact");
+		});
+	});
+});
+
+describe("Preserved Inlines", () => {
+	it("Should preserve inline scripts during swap", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div data-htbind>
+							<a id="load-content" href="/content">Load Content</a>
+							<div id="target">
+								Original
+								<script>window.__scriptCounter = (window.__scriptCounter || 0) + 1;</script>
+							</div>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+
+			cy.intercept("GET", "/content", {
+				statusCode: 200,
+				body: `<div id="target">
+				Updated
+				<script>window.__scriptCounter = (window.__scriptCounter || 0) + 1;</script>
+			</div>`,
+			}).as("getContent");
+
+			cy.visit("/");
+
+			cy.window().then((win) => {
+				expect(
+					(win as typeof win & { __scriptCounter: number }).__scriptCounter,
+				).to.equal(1);
+			});
+
+			cy.get("#load-content").click();
+			cy.wait("@getContent");
+
+			cy.get("#target").should("contain.text", "Updated");
+			cy.window().then((win) => {
+				expect(
+					(win as typeof win & { __scriptCounter: number }).__scriptCounter,
+				).to.equal(2);
+			});
+		});
+	});
+
+	it("Should preserve inline styles during swap", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div data-htbind>
+							<a id="load-content" href="/content">Load Content</a>
+							<div id="target">
+								Original
+								<style>#target { background-color: red; }</style>
+							</div>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+
+			cy.intercept("GET", "/content", {
+				statusCode: 200,
+				body: `<div id="target">
+					Updated
+					<style>#target { background-color: blue; }</style>
+				</div>`,
+			}).as("getContent");
+
+			cy.visit("/");
+
+			cy.get("#target").should(
+				"have.css",
+				"background-color",
+				"rgb(255, 0, 0)",
+			);
+
+			cy.get("#load-content").click();
+			cy.wait("@getContent");
+
+			cy.get("#target").should("contain.text", "Updated");
+			cy.get("#target").should(
+				"have.css",
+				"background-color",
+				"rgb(0, 0, 255)",
+			);
+		});
+	});
+});
+
+describe("Working Head", () => {
+	it("Should update document title on swap", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>Home Page</title>
+							${head.replace(/<head>|<\/head>/g, "")}
+						</head>
+						<body>
+							<div data-htbind>
+								<a id="about-link" href="/about">About</a>
+								<div id="content">Home</div>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head><title>About Page</title></head>
+						<body>
+							<div data-htbind>
+								<a id="about-link" href="/about">About</a>
+								<div id="content">About</div>
+							</div>
+						</body>
+					</html>
+				`,
+			}).as("getAbout");
+
+			cy.visit("/");
+
+			cy.title().should("equal", "Home Page");
+
+			cy.get("#about-link").click();
+			cy.wait("@getAbout");
+
+			cy.title().should("equal", "About Page");
+		});
+	});
+
+	it("Should utilize new stylesheets on swap", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/styles/home.css", {
+				statusCode: 200,
+				body: "body { background-color: white; }",
+			});
+
+			cy.intercept("GET", "/styles/about.css", {
+				statusCode: 200,
+				body: "body { background-color: lightblue; }",
+			}).as("getAboutStyles");
+
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>Home</title>
+							<link rel="stylesheet" href="/styles/home.css">
+							${head.replace(/<head>|<\/head>/g, "")}
+						</head>
+						<body>
+							<div data-htbind>
+								<a id="about-link" href="/about">About</a>
+								<div id="content">Home</div>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>About</title>
+							<link rel="stylesheet" href="/styles/about.css">
+						</head>
+						<body>
+							<div data-htbind>
+								<a id="about-link" href="/about">About</a>
+								<div id="content">About</div>
+							</div>
+						</body>
+					</html>
+				`,
+			}).as("getAbout");
+
+			cy.visit("/");
+
+			cy.get('link[href="/styles/home.css"]').should("exist");
+			cy.get('link[href="/styles/about.css"]').should("not.exist");
+
+			cy.get("#about-link").click();
+			cy.wait("@getAbout");
+			cy.wait("@getAboutStyles");
+
+			cy.get('link[href="/styles/about.css"]').should("exist");
+			cy.get("#content").should("contain.text", "About");
+		});
+	});
+
+	it("Should utilize new scripts on swap", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/scripts/home.js", {
+				statusCode: 200,
+				body: "window.__homeScriptLoaded = true;",
+			});
+
+			cy.intercept("GET", "/scripts/about.js", {
+				statusCode: 200,
+				body: "window.__aboutScriptLoaded = true;",
+			}).as("getAboutScript");
+
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>Home</title>
+							<script src="/scripts/home.js"></script>
+							${head.replace(/<head>|<\/head>/g, "")}
+						</head>
+						<body>
+							<div data-htbind>
+								<a id="about-link" href="/about">About</a>
+								<div id="content">Home</div>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>About</title>
+							<script src="/scripts/about.js"></script>
+						</head>
+						<body>
+							<div data-htbind>
+								<a id="about-link" href="/about">About</a>
+								<div id="content">About</div>
+							</div>
+						</body>
+					</html>
+				`,
+			}).as("getAbout");
+
+			cy.visit("/");
+
+			cy.window().then((win) => {
+				expect(
+					(win as typeof win & { __homeScriptLoaded: boolean })
+						.__homeScriptLoaded,
+				).to.be.true;
+			});
+
+			cy.get('script[src="/scripts/home.js"]').should("exist");
+			cy.get('script[src="/scripts/about.js"]').should("not.exist");
+
+			cy.get("#about-link").click();
+			cy.wait("@getAbout");
+			cy.wait("@getAboutScript");
+
+			cy.get('script[src="/scripts/about.js"]').should("exist");
+			cy.window().then((win) => {
+				expect(
+					(win as typeof win & { __aboutScriptLoaded: boolean })
+						.__aboutScriptLoaded,
+				).to.be.true;
+			});
+		});
+	});
+
+	it("Should handle various stylesheets and scripts", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/styles/common.css", {
+				statusCode: 200,
+				body: "* { margin: 0; }",
+			});
+
+			cy.intercept("GET", "/styles/home.css", {
+				statusCode: 200,
+				body: "body { background: white; }",
+			});
+
+			cy.intercept("GET", "/styles/about.css", {
+				statusCode: 200,
+				body: "body { background: lightblue; }",
+			}).as("getAboutStyles");
+
+			cy.intercept("GET", "/scripts/analytics.js", {
+				statusCode: 200,
+				body: "window.__analyticsLoaded = true;",
+			});
+
+			cy.intercept("GET", "/scripts/about.js", {
+				statusCode: 200,
+				body: "window.__aboutLoaded = true;",
+			}).as("getAboutScript");
+
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>Home</title>
+							<link rel="stylesheet" href="/styles/common.css">
+							<link rel="stylesheet" href="/styles/home.css">
+							<script src="/scripts/analytics.js"></script>
+							${head.replace(/<head>|<\/head>/g, "")}
+						</head>
+						<body>
+							<div data-htbind>
+								<a id="about-link" href="/about">About</a>
+								<div id="content">Home</div>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>About</title>
+							<link rel="stylesheet" href="/styles/common.css">
+							<link rel="stylesheet" href="/styles/about.css">
+							<script src="/scripts/analytics.js"></script>
+							<script src="/scripts/about.js"></script>
+						</head>
+						<body>
+							<div data-htbind>
+								<a id="about-link" href="/about">About</a>
+								<div id="content">About</div>
+							</div>
+						</body>
+					</html>
+				`,
+			}).as("getAbout");
+
+			cy.visit("/");
+
+			cy.get('link[href="/styles/common.css"]').should("exist");
+			cy.get('link[href="/styles/home.css"]').should("exist");
+			cy.get('script[src="/scripts/analytics.js"]').should("exist");
+
+			cy.get("#about-link").click();
+			cy.wait("@getAbout");
+			cy.wait("@getAboutStyles");
+			cy.wait("@getAboutScript");
+
+			cy.get('link[href="/styles/common.css"]').should("exist");
+			cy.get('link[href="/styles/about.css"]').should("exist");
+			cy.get('script[src="/scripts/analytics.js"]').should("exist");
+			cy.get('script[src="/scripts/about.js"]').should("exist");
+
+			cy.window().then((win) => {
+				expect(
+					(win as typeof win & { __analyticsLoaded: boolean })
+						.__analyticsLoaded,
+				).to.be.true;
+				expect((win as typeof win & { __aboutLoaded: boolean }).__aboutLoaded)
+					.to.be.true;
+			});
+		});
+	});
+});
+
+describe("History Support", () => {
+	it("Should handle back button navigation", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div data-htbind>
+								<a id="about-link" href="/about">About</a>
+								<div id="target">Home</div>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `<div id="target">About</div>`,
+			}).as("getAbout");
+
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#about-link").click();
+			cy.wait("@getAbout");
+			cy.get("#target").should("contain.text", "About");
+			cy.location("pathname").should("equal", "/about");
+
+			cy.go("back");
+
+			cy.get("#target").should("contain.text", "Home");
+			cy.location("pathname").should("equal", "/");
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+		});
+	});
+
+	it("Should handle forward button navigation", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div data-htbind>
+								<a id="about-link" href="/about">About</a>
+								<div id="target">Home</div>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `<div id="target">About</div>`,
+			}).as("getAbout");
+
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#about-link").click();
+			cy.wait("@getAbout");
+			cy.get("#target").should("contain.text", "About");
+
+			cy.go("back");
+			cy.get("#target").should("contain.text", "Home");
+
+			cy.go("forward");
+
+			cy.get("#target").should("contain.text", "About");
+			cy.location("pathname").should("equal", "/about");
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+		});
+	});
+
+	it("Should handle mixed back and forward navigation", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div data-htbind>
+								<a id="page1-link" href="/page1">Page 1</a>
+								<div id="target">Home</div>
+							</div>
+						</body>
+					</html>
+				`,
+			});
 
 			cy.intercept("GET", "/page1", {
 				statusCode: 200,
 				body: `
-				<div id="page">
-					<a id="go" href="/page2" data-htswap="#page" data-hthistory>Go</a>
-					<div id="content">Page1</div>
-				</div>
-			`,
+					<div data-htbind>
+						<a id="page2-link" href="/page2">Page 2</a>
+						<div id="target">Page 1</div>
+					</div>
+				`,
+			}).as("getPage1");
+
+			cy.intercept("GET", "/page2", {
+				statusCode: 200,
+				body: `<div id="target">Page 2</div>`,
+			}).as("getPage2");
+
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#page1-link").click();
+			cy.wait("@getPage1");
+			cy.get("#page2-link").click();
+			cy.wait("@getPage2");
+
+			cy.go("back");
+			cy.get("#target").should("contain.text", "Page 1");
+			cy.location("pathname").should("equal", "/page1");
+
+			cy.go("back");
+			cy.get("#target").should("contain.text", "Home");
+			cy.location("pathname").should("equal", "/");
+
+			cy.go("forward");
+			cy.get("#target").should("contain.text", "Page 1");
+			cy.location("pathname").should("equal", "/page1");
+
+			cy.go("forward");
+			cy.get("#target").should("contain.text", "Page 2");
+			cy.location("pathname").should("equal", "/page2");
+
+			cy.go("back");
+			cy.get("#target").should("contain.text", "Page 1");
+			cy.location("pathname").should("equal", "/page1");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+		});
+	});
+});
+
+describe("Normal Fragments", () => {
+	it("Should handle anchor links within the same page", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div data-htbind>
+								<a id="section-link" href="#section2">Jump to Section 2</a>
+								<div id="section1" style="height: 2000px; background: lightblue;">Section 1</div>
+								<div id="section2" style="height: 2000px; background: lightgreen;">Section 2</div>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+			cy.visit("/");
+
+			cy.window().its("scrollY").should("equal", 0);
+
+			cy.get("#section-link").click();
+
+			cy.location("hash").should("equal", "#section2");
+
+			cy.wait(100);
+
+			cy.get("#section2").should("be.visible");
+			cy.window().then((win) => {
+				const el = win.document.getElementById("section2");
+				expect(el).to.not.be.null;
+				const rect = el?.getBoundingClientRect();
+				expect(rect?.top).to.be.lessThan(150);
+			});
+		});
+	});
+
+	it("Should handle anchor links after content swap", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div data-htbind>
+								<a id="page-link" href="/page">Go to Page</a>
+								<div id="content">Home</div>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/page", {
+				statusCode: 200,
+				body: `
+					<div data-htbind>
+						<a id="section-link" href="#target-section">Jump to Section</a>
+						<div id="content" style="height: 2000px; background: lightblue;">Content</div>
+						<div id="target-section" style="height: 2000px; background: lightcoral;">Target Section</div>
+					</div>
+				`,
+			}).as("getPage");
+
+			cy.visit("/");
+
+			cy.get("#page-link").click();
+			cy.wait("@getPage");
+
+			cy.get("#section-link").should("exist");
+			cy.window().its("scrollY").should("equal", 0);
+
+			cy.get("#section-link").click();
+
+			cy.location("hash").should("equal", "#target-section");
+			cy.wait(100);
+
+			cy.get("#target-section").should("be.visible");
+			cy.window().then((win) => {
+				const el = win.document.getElementById("target-section");
+				expect(el).to.not.be.null;
+				const rect = el?.getBoundingClientRect();
+				expect(rect?.top).to.be.lessThan(150);
+			});
+		});
+	});
+
+	it("Should navigate to page with hash fragment", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div data-htbind>
+								<a id="page-link" href="/page#bottom">Go to Page Bottom</a>
+								<div id="content">Home</div>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/page", {
+				statusCode: 200,
+				body: `
+					<div data-htbind>
+						<div id="top" style="height: 2000px; background: lightyellow;">Top Content</div>
+						<div id="bottom" style="height: 2000px; background: lightpink;">Bottom Content</div>
+					</div>
+				`,
+			}).as("getPage");
+
+			cy.visit("/");
+
+			cy.get("#page-link").click();
+			cy.wait("@getPage");
+
+			cy.location("pathname").should("equal", "/page");
+			cy.location("hash").should("equal", "#bottom");
+
+			cy.get("#bottom").should("exist");
+			cy.wait(100);
+
+			cy.get("#bottom").should("be.visible");
+			cy.window().then((win) => {
+				const el = win.document.getElementById("bottom");
+				expect(el).to.not.be.null;
+				const rect = el?.getBoundingClientRect();
+				expect(rect?.top).to.be.lessThan(150);
+			});
+		});
+	});
+
+	it("Should handle hash fragments across multiple page navigations", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div data-htbind>
+								<a id="page1-link" href="/page1#section-a">Page 1 Section A</a>
+								<div id="content">Home</div>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/page1", {
+				statusCode: 200,
+				body: `
+					<div data-htbind>
+						<a id="page2-link" href="/page2#section-b">Page 2 Section B</a>
+						<div style="height: 2000px; background: lightgray;">Header</div>
+						<div id="section-a" style="height: 2000px; background: lavender;">Section A</div>
+					</div>
+				`,
 			}).as("getPage1");
 
 			cy.intercept("GET", "/page2", {
 				statusCode: 200,
 				body: `
-				<div id="page">
-					<div id="content">Page2</div>
-				</div>
-			`, // ✅ Added #page wrapper
+					<div data-htbind>
+						<div style="height: 2000px; background: lightcyan;">Header</div>
+						<div id="section-b" style="height: 2000px; background: peachpuff;">Section B</div>
+					</div>
+				`,
 			}).as("getPage2");
 
-			cy.get("#go").click();
+			cy.visit("/");
+
+			cy.get("#page1-link").click();
 			cy.wait("@getPage1");
-			cy.get("#content").should("contain.text", "Page1");
-			cy.get("#go").should("have.attr", "href", "/page2");
+			cy.location("hash").should("equal", "#section-a");
 
-			cy.get("#go").click();
-			cy.wait("@getPage2");
-			cy.get("#content").should("contain.text", "Page2");
-
-			cy.go("back");
-			cy.get("#content").should("contain.text", "Page1");
-
-			cy.go("back");
-			cy.get("#content").should("contain.text", "Original");
-		});
-	});
-	it("Should swap multiple targets if specified", () => {
-		initScript().then((script) => {
-			cy.intercept("GET", "/", {
-				statusCode: 200,
-				body: `
-					${script}
-					<div>
-						<a id="go" href="/new" data-htswap="#target, #target2">Go</a>
-						<div id="target">Original</div>
-						<div id="target2">Original</div>
-					</div>
-				`,
-			});
-			cy.visit("/");
-
-			cy.intercept("GET", "/new", {
-				statusCode: 200,
-				body: '<div id="target">1 Updated by swapInit</div> <div id="target2">2 Updated by swapInit</div>',
-			}).as("getNew");
-
-			cy.get("#go").click();
-			cy.wait("@getNew");
-			cy.get("#target").should("contain.text", "1 Updated by swapInit");
-			cy.get("#target2").should("contain.text", "2 Updated by swapInit");
-		});
-	});
-
-	it("Should swap with aliases if specified", () => {
-		initScript().then((script) => {
-			cy.intercept("GET", "/", {
-				statusCode: 200,
-				body: `
-					${script}
-					<div>
-						<a id="go" href="/new" data-htswap="#el1->#targ1, #el2->#targ2">Go</a>
-						<div id="target-list">
-							<div id="targ1">The first target</div>
-							<div id="targ2">The second target</div>
-						</div>
-					</div>
-				`,
-			});
-			cy.visit("/");
-
-			cy.intercept("GET", "/new", {
-				statusCode: 200,
-				body: `
-					<div>
-						<div id="el1">The first element</div>
-						<div id="el2">The second element</div>
-					</div>
-				`,
-			}).as("getNew");
-
-			cy.get("#go").click();
-			cy.wait("@getNew");
-			cy.get("#el1").should("contain.text", "The first element");
-			cy.get("#el2").should("contain.text", "The second element");
-
-			cy.get("body")
-				.invoke("html")
-				.then((html: string) => {
-					cy.log(html);
-				});
-
-			cy.get("#target-list");
-		});
-	});
-
-	it("Should swap according to merge modes", () => {
-		initScript().then((script) => {
-			cy.intercept("GET", "/", {
-				statusCode: 200,
-				body: `
-					${script}
-					<div>
-						<a id="go" href="/new" data-htswap="#el2->#target, #el3->#target4">Go</a>
-						<div id="target-list">
-							<div id="target">First</div>
-							<div id="target4">Fourth</div>
-						</div>
-					</div>
-				`,
-			});
-			cy.visit("/");
-
-			cy.intercept("GET", "/new", {
-				statusCode: 200,
-				body: `
-					<div>
-						<div id="el2">Second</div>
-						<div id="el3">Third</div>
-					</div>
-				`,
-			}).as("getNew");
-
-			cy.get("#go").click();
-			cy.wait("@getNew");
-
-			cy.get("#target-list")
-				.invoke("text")
-				.then((text: string) => {
-					const normalizedText: string = text.replace(/\s+/g, "");
-					expect(normalizedText).to.equal("SecondThird");
-				});
-
-			cy.get("body").then(($body) => {
-				cy.log($body.html());
-			});
-		});
-	});
-
-	it("Should only fetch once if preloaded", () => {
-		initScript().then((script) => {
-			let fetchCount: number = 0;
-
-			cy.intercept("GET", "/", {
-				statusCode: 200,
-				body: `
-					${script}
-					<div>
-						<a id="go" href="/new" data-htswap="#target" data-htpreload>Go</a>
-						<div id="target">Original</div>
-					</div>
-				`,
-			});
-			cy.visit("/");
-
-			cy.intercept("GET", "/new", (req) => {
-				fetchCount++;
-				req.reply({
-					statusCode: 200,
-					body: '<div id="target">Updated by swapInit</div>',
-				});
-			}).as("getNew");
-
+			cy.get("#section-a").should("exist");
 			cy.wait(100);
-			cy.wait("@getNew");
 
-			cy.then(() => {
-				expect(fetchCount).to.equal(1);
+			cy.get("#section-a").should("be.visible");
+			cy.window().then((win) => {
+				const el = win.document.getElementById("section-a");
+				expect(el).to.not.be.null;
+				const rect = el?.getBoundingClientRect();
+				expect(rect?.top).to.be.lessThan(150);
 			});
 
-			cy.get("#go").click();
-			cy.get("#target").should("contain.text", "Updated by swapInit");
+			cy.get("#page2-link").click();
+			cy.wait("@getPage2");
+			cy.location("hash").should("equal", "#section-b");
 
-			cy.then(() => {
-				expect(fetchCount).to.equal(1);
+			cy.get("#section-b").should("exist");
+			cy.wait(100);
+
+			cy.get("#section-b").should("be.visible");
+			cy.window().then((win) => {
+				const el = win.document.getElementById("section-b");
+				expect(el).to.not.be.null;
+				const rect = el?.getBoundingClientRect();
+				expect(rect?.top).to.be.lessThan(150);
 			});
 		});
 	});
 
-	it("Should allow scripts to work", () => {
-		initScript().then((script) => {
+	it("Should preserve hash fragments with back and forward navigation", () => {
+		prepareHead().then((head) => {
 			cy.intercept("GET", "/", {
 				statusCode: 200,
 				body: `
-					${script}
-					<div>
-						<a id="load" href="/one" data-htswap="#target">Load</a>
-						<div id="target">
-							<p>Original</p>
-						</div>
-					</div>
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div data-htbind>
+								<a id="page1-link" href="/page1#top">Page 1 Top</a>
+								<div id="content">Home</div>
+							</div>
+						</body>
+					</html>
 				`,
 			});
-			cy.visit("/");
 
-			cy.intercept("GET", "/one", {
+			cy.intercept("GET", "/page1", {
 				statusCode: 200,
 				body: `
-					<div>
-						<div id="target">
-							<p>Hi</p>
-							<script>
-								document.getElementById('target').setAttribute('data-script-ran', 'true');
-							</script>
-						</div>
+					<div data-htbind>
+						<a id="page2-link" href="/page2#middle">Page 2 Middle</a>
+						<div id="top" style="height: 2000px; background: mintcream;">Top Section</div>
+						<div id="bottom" style="height: 2000px; background: mistyrose;">Bottom Section</div>
 					</div>
 				`,
-			}).as("getOne");
+			}).as("getPage1");
 
-			cy.get("#target").should("not.have.attr", "data-script-ran");
-			cy.get("#load").click();
-			cy.wait("@getOne");
-			cy.get("#target").should("have.attr", "data-script-ran", "true");
+			cy.intercept("GET", "/page2", {
+				statusCode: 200,
+				body: `
+					<div data-htbind>
+						<div id="header" style="height: 2000px; background: azure;">Header</div>
+						<div id="middle" style="height: 2000px; background: beige;">Middle Section</div>
+						<div id="footer" style="height: 2000px; background: cornsilk;">Footer</div>
+					</div>
+				`,
+			}).as("getPage2");
+
+			cy.visit("/");
+
+			cy.get("#page1-link").click();
+			cy.wait("@getPage1");
+			cy.location("pathname").should("equal", "/page1");
+			cy.location("hash").should("equal", "#top");
+
+			cy.get("#top").should("exist");
+			cy.wait(100);
+
+			cy.get("#top").should("be.visible");
+			cy.window().then((win) => {
+				const el = win.document.getElementById("top");
+				expect(el).to.not.be.null;
+				const rect = el?.getBoundingClientRect();
+				expect(rect?.top).to.be.lessThan(150);
+			});
+
+			cy.get("#page2-link").click();
+			cy.wait("@getPage2");
+			cy.location("pathname").should("equal", "/page2");
+			cy.location("hash").should("equal", "#middle");
+
+			cy.get("#middle").should("exist");
+			cy.wait(100);
+
+			cy.get("#middle").should("be.visible");
+			cy.window().then((win) => {
+				const el = win.document.getElementById("middle");
+				expect(el).to.not.be.null;
+				const rect = el?.getBoundingClientRect();
+				expect(rect?.top).to.be.lessThan(150);
+			});
+
+			cy.go("back");
+			cy.location("pathname").should("equal", "/page1");
+			cy.location("hash").should("equal", "#top");
+
+			cy.get("#top").should("exist");
+			cy.wait(100);
+
+			cy.get("#top").should("be.visible");
+			cy.window().then((win) => {
+				const el = win.document.getElementById("top");
+				expect(el).to.not.be.null;
+				const rect = el?.getBoundingClientRect();
+				expect(rect?.top).to.be.lessThan(150);
+			});
+
+			cy.go("back");
+			cy.location("pathname").should("equal", "/");
+			cy.location("hash").should("equal", "");
+
+			cy.go("forward");
+			cy.location("pathname").should("equal", "/page1");
+			cy.location("hash").should("equal", "#top");
+
+			cy.get("#top").should("exist");
+			cy.wait(100);
+
+			cy.get("#top").should("be.visible");
+			cy.window().then((win) => {
+				const el = win.document.getElementById("top");
+				expect(el).to.not.be.null;
+				const rect = el?.getBoundingClientRect();
+				expect(rect?.top).to.be.lessThan(150);
+			});
+
+			cy.go("forward");
+			cy.location("pathname").should("equal", "/page2");
+			cy.location("hash").should("equal", "#middle");
+
+			cy.get("#middle").should("exist");
+			cy.wait(100);
+
+			cy.get("#middle").should("be.visible");
 		});
 	});
 });
 
-describe("HTSwap Forms", () => {
-	it("Should swap on submit with GET", () => {
-		initScript().then((script) => {
+describe("Maintained Scroll", () => {
+	it("Should maintain scroll position of previous swaps", () => {
+		prepareHead().then((head) => {
 			cy.intercept("GET", "/", {
 				statusCode: 200,
 				body: `
-					${script}
-					<div>
-						<form action="/search" data-htswap="#list">
-							<input type="text" id="title" name="title" />
-							<button id="do-search" type="submit">submit</button>
-						</form>
-						<ul id="list">
-							<li>P1</li>
-							<li>P2</li>
-							<li>P3</li>
-						</ul>
-					</div>
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div data-htbind>
+							<a id="update-link" href="/update">Update</a>
+							<div id="content" style="height: 2000px;">Original Content</div>
+						</div>
+					</body>
+				</html>
 				`,
 			});
-			cy.visit("/");
-
-			cy.intercept("GET", "/search*", (req) => {
-				const searchParams: URLSearchParams = new URLSearchParams(
-					req.url.split("?")[1] || "",
-				);
-				const titleFilter: string = searchParams.get("title") || "";
-
-				const elements: string[] = ["P1", "P2", "P3"]
-					.filter((v: string): boolean => v.includes(titleFilter))
-					.map((v: string): string => `<li>${v}</li>`);
-
-				req.reply({
-					statusCode: 200,
-					body: `<ul id="list">${elements.join("")}</ul>`,
-				});
-			}).as("searchRequest");
-
-			cy.get("#list").within(() => {
-				cy.get("li").should("have.length", 3);
-				cy.contains("P1").should("exist");
-				cy.contains("P2").should("exist");
-				cy.contains("P3").should("exist");
-			});
-
-			cy.get("#title").type("P1");
-			cy.get("#do-search").click();
-			cy.wait("@searchRequest");
-
-			cy.get("#list").within(() => {
-				cy.get("li").should("have.length", 1);
-				cy.contains("P1").should("exist");
-			});
-
-			cy.get("#title").clear().type("P3");
-			cy.get("#do-search").click();
-			cy.wait("@searchRequest");
-
-			cy.get("#list").within(() => {
-				cy.get("li").should("have.length", 1);
-				cy.contains("P3").should("exist");
-			});
-		});
-	});
-
-	it("Should swap on submit with POST", (): void => {
-		initScript().then((script) => {
-			cy.intercept("POST", "/signup", (req): void => {
-				const formData = parseMultipartFormData(req as TMultipartFormDataReq);
-
-				const username = formData.username || "";
-				const email = formData.email || "";
-
-				req.reply({
-					statusCode: 200,
-					body: `
-					<div id="response">
-						<p>Welcome, ${username}!</p>
-						<p>Email: ${email}</p>
-					</div>
-				`,
-				});
-			}).as("signupRequest");
-
-			cy.intercept("GET", "/", {
+			cy.intercept("GET", "/update", {
 				statusCode: 200,
 				body: `
-				${script}
-				<div>
-					<form action="/signup" method="post" data-htswap="#response">
-						<input type="text" id="username" name="username" />
-						<input type="email" id="email" name="email" />
-						<input type="password" id="password" name="password" />
-						<button id="signup-btn" type="submit">Sign Up</button>
-					</form>
-					<div id="response"></div>
+				<div data-htbind>
+					<div id="content" style="height: 2000px;">Updated Content</div>
 				</div>
 			`,
-			});
+			}).as("getUpdate");
 
 			cy.visit("/");
+			cy.scrollTo(0, 500);
+			cy.wait(100);
+			cy.window().its("scrollY").should("be.closeTo", 500, 10);
 
-			cy.get("#username").type("testuser");
-			cy.get("#email").type("test@example.com");
-			cy.get("#password").type("secretpassword");
-
-			cy.get("#signup-btn").click();
-			cy.wait("@signupRequest");
-
-			cy.get("#response").within((): void => {
-				cy.contains("Welcome, testuser!").should("exist");
-				cy.contains("Email: test@example.com").should("exist");
+			cy.get("#update-link").then(($el) => {
+				$el[0].click(); // dom click to prevent cypress auto scroll
 			});
+
+			cy.wait("@getUpdate");
+			cy.get("#content").should("contain.text", "Updated Content");
+			cy.window().its("scrollY").should("be.closeTo", 0, 10);
+
+			cy.go("back");
+			cy.wait(100);
+			cy.get("#content").should("contain.text", "Original Content");
+			cy.window().its("scrollY").should("be.closeTo", 500, 10);
 		});
 	});
 });
+
+//
+
+describe("Loading States", () => {});
+describe("Multiple Targets", () => {});
+describe("History Modes", () => {});
+describe("Merge Modes", () => {});
+describe("Target Aliases", () => {});
+describe("Preload", () => {});

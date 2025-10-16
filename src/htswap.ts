@@ -1,141 +1,153 @@
-const cache = new Map<string, string>();
+type HistoryState = {
+	selector?: string;
+	scrollY?: number;
+};
 
-export async function htswapUpdate(
-	target: string,
+export async function update(
+	selector: string,
 	url: string,
 	hist?: string,
+	newScrollY?: number,
 	body?: BodyInit,
-	preload?: boolean,
 ) {
-	const targets = target.split(",").map((t) => {
-		const [sel, merge = "outerHTML"] = t.split("@");
-		const [from, to = from] = sel.split("->");
+	const scrollY = window.scrollY;
+
+	const targets = selector.split(",").map((s) => {
 		return {
-			from,
-			toEl: document.querySelector(to) || document.body,
-			to,
-			merge: merge as "outerHTML" | "innerHTML" | "remove" | InsertPosition,
+			el: document.querySelector(s),
+			sl: s,
 		};
 	});
 
-	targets.forEach((t) => t.toEl?.setAttribute("aria-busy", "true"));
+	const serverHtml = await fetch(url, {
+		method: body ? "POST" : "GET",
+		headers: { "x-htswap": selector },
+		body,
+	}).then((r) => r.text());
 
-	try {
-		const html =
-			(cache.get(url) as string) ||
-			(await (
-				await fetch(url, {
-					method: body ? "POST" : "GET",
-					headers: { "x-htswap": target },
-					body,
-					signal: AbortSignal.timeout(5000),
-				})
-			).text());
-		if (html) cache.delete(url);
-		if (preload) {
-			cache.set(url, html);
+	const serverDoc = new DOMParser().parseFromString(serverHtml, "text/html");
+
+	const title = serverDoc.querySelector("title");
+	if (title) {
+		document.querySelector("title")?.replaceWith(title);
+	}
+
+	for (const script of serverDoc.head.querySelectorAll("script[src]")) {
+		const src = script.getAttribute("src");
+		if (src && !document.querySelector(`script[src="${src}"]`)) {
+			const newScript = document.createElement("script");
+			newScript.src = src;
+			document.head.appendChild(newScript);
+		}
+	}
+	for (const link of serverDoc.head.querySelectorAll(
+		"link[rel='stylesheet']",
+	)) {
+		const href = link.getAttribute("href");
+		if (href && !document.querySelector(`link[href="${href}"]`)) {
+			const newLink = document.createElement("link");
+			newLink.rel = "stylesheet";
+			newLink.href = href;
+			document.head.appendChild(newLink);
+		}
+	}
+	for (const target of targets) {
+		if (!target.el) continue;
+		const serverEl = serverDoc.querySelector(target.sl) || serverDoc.body;
+		if (!serverEl) continue;
+		target.el.outerHTML = serverEl.outerHTML;
+		for (const s of document
+			.querySelector(target.sl)
+			?.querySelectorAll("script") || []) {
+			const n = document.createElement("script");
+			n.textContent = s.textContent;
+			s.replaceWith(n);
+		}
+	}
+
+	if (!hist || hist === "push") {
+		history.replaceState(
+			{ ...history.state, scrollY } satisfies HistoryState,
+			"",
+		);
+	}
+
+	if (!hist || hist === "push") {
+		history.pushState({ selector } satisfies HistoryState, "", url);
+	} else if (hist === "replace") {
+		history.replaceState({ selector } satisfies HistoryState, "", url);
+	}
+
+	requestAnimationFrame(() => {
+		try {
+			const hash = new URL(url, location.href).hash;
+			if (newScrollY !== undefined) {
+				window.scrollTo(0, newScrollY);
+			} else if (hash) {
+				document.querySelector(hash)?.scrollIntoView();
+			} else {
+				window.scrollTo(0, 0);
+			}
+		} catch (_e) {}
+	});
+}
+
+export async function bind() {
+	for (const el of document.querySelectorAll(
+		"[data-htswap]:not([data-htbound])" +
+			",[data-htbind] a:not([data-htbound])" +
+			",[data-htbind] form:not([data-htbound])",
+	) as NodeListOf<HTMLElement>) {
+		el.setAttribute("data-htbound", "true");
+
+		const url =
+			(el as HTMLFormElement).action ||
+			el.getAttribute("href") ||
+			location.href;
+
+		if (el instanceof HTMLFormElement) {
+			el.onsubmit = (e) => {
+				e.preventDefault();
+
+				const data = new FormData(el);
+				const method = el.method.toUpperCase();
+
+				update(
+					el.dataset.htswap || "body",
+					method === "POST"
+						? url
+						: url +
+								(url.includes("?") ? "&" : "?") +
+								new URLSearchParams(data as unknown as string),
+					el.dataset.hthistory,
+					undefined,
+					method === "POST" ? data : undefined,
+				);
+			};
 			return;
 		}
 
-		const doc = new DOMParser().parseFromString(html, "text/html");
-
-		const title = doc.querySelector("title");
-		if (title) {
-			document.querySelector("title")?.replaceWith(title);
-		}
-		targets.forEach(({ from, toEl, to, merge }) => {
-			if (!toEl) return;
-			const fromEl = doc.querySelector(from) || doc.body;
-			if (!fromEl) return;
-
-			if (merge === "outerHTML") toEl.outerHTML = fromEl.outerHTML;
-			else if (merge === "innerHTML") toEl.innerHTML = fromEl.innerHTML;
-			else if (merge === "remove") toEl.remove();
-			else toEl.insertAdjacentHTML(merge, fromEl.innerHTML);
-
-			document
-				.querySelector(to)
-				?.querySelectorAll("script")
-				.forEach((s) => {
-					const n = document.createElement("script");
-					n.textContent = s.textContent;
-					s.replaceWith(n);
-				});
-		});
-
-		if (!hist || hist === "push") history.pushState({ target }, "", url);
-		else if (hist === "replace") history.replaceState({ target }, "", url);
-	} catch (e) {
-		console.error(`htswap: ${e}`);
-	} finally {
-		targets.forEach((t) => t.toEl?.setAttribute("aria-busy", "false"));
+		el.onclick = (e) => {
+			e.preventDefault();
+			update(el.dataset.htswap || "body", url, el.dataset.hthistory);
+		};
 	}
 }
 
-export function htswapBind() {
-	document
-		.querySelectorAll(
-			"[data-htswap]:not([data-htbound])" +
-				",[data-htbind] a:not([data-htbound])" +
-				",[data-htbind] form:not([data-htbound])",
-		)
-		.forEach((el) => {
-			el.setAttribute("data-htbound", "true");
-			const url =
-				(el as HTMLFormElement).action ||
-				(el as HTMLAnchorElement).href ||
-				location.href;
-
-			if (el instanceof HTMLFormElement) {
-				el.onsubmit = (e) => {
-					e.preventDefault();
-					const data = new FormData(el);
-					const method = el.method.toUpperCase();
-
-					htswapUpdate(
-						(el as HTMLElement).dataset.htswap || "body",
-						method === "POST"
-							? url
-							: url +
-									(url.includes("?") ? "&" : "?") +
-									new URLSearchParams(data as unknown as string),
-						(el as HTMLElement).dataset.hthistory,
-						method === "POST" ? data : undefined,
-					);
-				};
-			} else {
-				if (url.startsWith("#")) return;
-
-				if (el.hasAttribute("data-htpreload")) {
-					htswapUpdate(
-						(el as HTMLElement).dataset.htswap || "body",
-						url,
-						(el as HTMLElement).dataset.hthistory,
-						undefined,
-						true,
-					);
-				}
-
-				(el as HTMLElement).onclick = (e) => {
-					e.preventDefault();
-					htswapUpdate(
-						(el as HTMLElement).dataset.htswap || "body",
-						url,
-						(el as HTMLElement).dataset.hthistory,
-					);
-				};
-			}
-		});
-}
-
-export function htswapInit() {
-	htswapBind();
-	new MutationObserver(htswapBind).observe(document.documentElement, {
+export function init() {
+	bind();
+	new MutationObserver(bind).observe(document.documentElement, {
 		childList: true,
 		subtree: true,
 	});
 	window.addEventListener("popstate", (e) =>
-		htswapUpdate(e.state?.target || "body", location.href, "none"),
+		update(
+			(e.state as HistoryState)?.selector || "body",
+			location.href,
+			"none",
+			(e.state as HistoryState)?.scrollY,
+		),
 	);
 }
-htswapInit();
+
+init();

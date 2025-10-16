@@ -1,8 +1,10 @@
 # 🔄 htswap
 
-**Minimal, lightweight script for seamless AJAX-style UI content swapping.** By importing `htswap`, and adding a `data-htswap` attribute, your anchors and forms get the speed of client-side-rendering in your server-side-rendered/static sites.
+**Minimal, lightweight script for seamless AJAX-style UI content swapping.** By using `htswap`, your anchors and forms become enhanced and fast, not broken or replaced.
 
-Based on **Swap.js**, and inspired by **HTMZ**, **HTMX**, **Alpine-Ajax**, among others. A modern, smaller, more semantic alternative.
+The aim of `htswap` is to be a small, simple solution for removing reloads and implementing seamless content swapping, while allowing no-js users of your site to still have a good experience.
+
+Based on a number of other libraries, see [why it exists](#-why).
 
 <br>
 
@@ -18,10 +20,22 @@ Based on **Swap.js**, and inspired by **HTMZ**, **HTMX**, **Alpine-Ajax**, among
 ## ✴️️ Features
 
 - **Dynamic Content**: Content on the page will be swapped dynamically, without reloading
-- **History Support**: Browser back/forward buttons will work seamlessly, without reloading  
-- **Progressive Enhancement**: Anchors and forms can be opted in by a single attribute
-- **Loading States**: Loading state can be styled through `aria-busy="true"`
+- **Progressive Enhancement**: Anchors and forms (or whole sections) can be opted in by a single attribute
 - **Graceful Degradation**: If JS is turned off, your anchors and forms will work as normal
+- **Preserved Inlines**: Inline scripts and styles are preserved and work as expected
+- **Working Head**: Swapped head tags work as expected, including styles and scripts
+- **History Support**: Browser back/forward buttons will work seamlessly, without reloading
+- **Normal Fragments**: Anchor links (#) work within swapped content, in-page and across pages
+- **Maintained Scroll**: Scroll position between swap history is maintained
+
+**To be re-added:**
+
+- [ ] **Loading States**: Loading state can be styled (through `aria-busy="true"`)
+- [X] **Multiple Targets**: Swap multiple elements at once
+- [ ] **History Modes**: Swap without url changes or replace the url than pushing to it
+- [ ] **Merge Modes**: Swap content in different ways (innerHTML, outerHTML, etc.)
+- [ ] **Target Aliases**: Swap content with different elements on the server
+- [ ] **Preload Anchors**: Fetch anchor content on page load for instant swaps
 
 ## 📦 Installation
 
@@ -209,7 +223,7 @@ It is recommended for the backend to check the `x-htswap` header, and only retur
 With this section being personal reasoning, I'll first go through similar libraries/scripts, detailing what I don't like about them:
 
 - [`Swap.js`](https://github.com/josephernest/Swap.js): 450b gzipped, no form support, no history or merge modes, old codebase.
-- [`Alpine-AJAX`](https://alpine-ajax.js.org/): 3kb gzipped, requires `alpinejs` to work.
+- [`Alpine-AJAX`](https://alpine-ajax.js.org/): 3kb gzipped, requires `alpinejs` to work which adds 10kb+.
 - [`HTMZ`](https://leanrada.com/htmz/): 160b gzipped, noticeable 1-2 second delay on the first click, no history or merge modes, elements don't work when js is turned off. 
 - [`HTMX`](https://htmx.org/): 11kb gzipped, too large, too flexible and verbose, decides that other elements (e.g. buttons, divs) should make ajax requests.
 - [`zjax`](https://www.zjax.dev/): 5kb gzipped, includes client-side interactivity logic, disregards built-in anchor/form logic.
@@ -217,7 +231,7 @@ With this section being personal reasoning, I'll first go through similar librar
 
 Your usecase or preference might align with one of the above, but I needed `htswap`, which:
 
-- Doesn't go above 1kb (gzipped) in size.
+- Doesn't go above 2kb (gzipped) in size.
 - Doesn't include anything more than enhancements for anchors/forms.
 - Doesn't break existing anchor/form functionality.
 - Doesn't force you to use its aproach for client-side interactivity.

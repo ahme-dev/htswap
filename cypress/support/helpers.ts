@@ -1,7 +1,15 @@
-export const initScript = (): Cypress.Chainable<string> =>
-	cy
-		.readFile("dist/htswap.js", "utf8")
-		.then((code) => `<script type="module">${code};</script>`);
+export const prepareHead = () =>
+	cy.readFile("dist/htswap.js", "utf8").then((code) => {
+		cy.intercept("GET", "/htswap.js", {
+			statusCode: 200,
+			headers: { "Content-Type": "application/javascript" },
+			body: code,
+		}).as("getHtswap");
+
+		return cy.wrap(
+			`<head><script src="/htswap.js" type="module"></script><script>window.__marker = Math.random();</script></head>`,
+		);
+	});
 
 export type TMultipartFormDataReq = {
 	headers: Record<string, string>;
