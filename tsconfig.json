@@ -12,6 +12,7 @@
 		"allowImportingTsExtensions": true,
 		"noEmit": true,
 		"outDir": "dist",
+		"removeComments": true,
 		"resolveJsonModule": true,
 		"types": ["vitest/globals"]
 	}

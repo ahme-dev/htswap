@@ -19,6 +19,8 @@ export async function update(
 		};
 	});
 
+	// fetch update
+
 	const serverHtml = await fetch(url, {
 		method: body ? "POST" : "GET",
 		headers: { "x-htswap": selector },
@@ -27,11 +29,12 @@ export async function update(
 
 	const serverDoc = new DOMParser().parseFromString(serverHtml, "text/html");
 
-	const title = serverDoc.querySelector("title");
-	if (title) {
-		document.querySelector("title")?.replaceWith(title);
-	}
+	// use title from server response
 
+	const title = serverDoc.querySelector("title");
+	if (title) document.querySelector("title")?.replaceWith(title);
+
+	// run response's added head scripts
 	for (const script of serverDoc.head.querySelectorAll("script[src]")) {
 		const src = script.getAttribute("src");
 		if (src && !document.querySelector(`script[src="${src}"]`)) {
@@ -40,6 +43,8 @@ export async function update(
 			document.head.appendChild(newScript);
 		}
 	}
+
+	// add response's added head stylesheets
 	for (const link of serverDoc.head.querySelectorAll(
 		"link[rel='stylesheet']",
 	)) {
@@ -51,11 +56,15 @@ export async function update(
 			document.head.appendChild(newLink);
 		}
 	}
+
 	for (const target of targets) {
 		if (!target.el) continue;
 		const serverEl = serverDoc.querySelector(target.sl) || serverDoc.body;
 		if (!serverEl) continue;
+
 		target.el.outerHTML = serverEl.outerHTML;
+
+		// run added inline scripts
 		for (const s of document
 			.querySelector(target.sl)
 			?.querySelectorAll("script") || []) {
@@ -65,6 +74,7 @@ export async function update(
 		}
 	}
 
+	// save scroll level before pushing history changes
 	if (!hist || hist === "push") {
 		history.replaceState(
 			{ ...history.state, scrollY } satisfies HistoryState,
@@ -72,24 +82,24 @@ export async function update(
 		);
 	}
 
-	if (!hist || hist === "push") {
-		history.pushState({ selector } satisfies HistoryState, "", url);
-	} else if (hist === "replace") {
-		history.replaceState({ selector } satisfies HistoryState, "", url);
-	}
+	// push or replace history
 
-	requestAnimationFrame(() => {
-		try {
-			const hash = new URL(url, location.href).hash;
-			if (newScrollY !== undefined) {
-				window.scrollTo(0, newScrollY);
-			} else if (hash) {
-				document.querySelector(hash)?.scrollIntoView();
-			} else {
-				window.scrollTo(0, 0);
-			}
-		} catch (_e) {}
-	});
+	if (!hist || hist === "push")
+		history.pushState({ selector } satisfies HistoryState, "", url);
+	else if (hist === "replace")
+		history.replaceState({ selector } satisfies HistoryState, "", url);
+
+	// handle scrolling
+
+	try {
+		const hash = new URL(url, location.href).hash;
+		// if a scroll level is provided (saved in history) scroll to that
+		if (newScrollY !== undefined) window.scrollTo(0, newScrollY);
+		// otherwise if hash exists, scroll there
+		else if (hash) document.querySelector(hash)?.scrollIntoView();
+		// else by default scroll to top
+		else window.scrollTo(0, 0);
+	} catch (_e) {}
 }
 
 export async function bind() {
@@ -105,6 +115,8 @@ export async function bind() {
 			el.getAttribute("href") ||
 			location.href;
 
+		// bind forms
+
 		if (el instanceof HTMLFormElement) {
 			el.onsubmit = (e) => {
 				e.preventDefault();
@@ -114,6 +126,7 @@ export async function bind() {
 
 				update(
 					el.dataset.htswap || "body",
+					// add form data to url if GET
 					method === "POST"
 						? url
 						: url +
@@ -121,11 +134,14 @@ export async function bind() {
 								new URLSearchParams(data as unknown as string),
 					el.dataset.hthistory,
 					undefined,
+					// only add form data as body when POST
 					method === "POST" ? data : undefined,
 				);
 			};
 			return;
 		}
+
+		// bind elements (currently anchors)
 
 		el.onclick = (e) => {
 			e.preventDefault();
@@ -136,10 +152,12 @@ export async function bind() {
 
 export function init() {
 	bind();
+	// rebind newly swapped elements
 	new MutationObserver(bind).observe(document.documentElement, {
 		childList: true,
 		subtree: true,
 	});
+	// intercept browser history navigation
 	window.addEventListener("popstate", (e) =>
 		update(
 			(e.state as HistoryState)?.selector || "body",
