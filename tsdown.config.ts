@@ -1,9 +1,65 @@
 import { defineConfig } from "tsdown";
+import swc from "unplugin-swc";
 import pkg from "./package.json" with { type: "json" };
+
+const banner = `// ${pkg.name}-${(pkg as any).version || "dev"}-${pkg.repository.url}`;
 
 export default defineConfig([
 	{
-		name: "Compatiblity",
+		name: "Legacy",
+		entry: "./src/htswap.ts",
+		outDir: "dist-legacy",
+		target: false,
+		platform: "browser",
+		format: ["commonjs", "esm"],
+		dts: true,
+		banner: {
+			js: banner,
+		},
+		plugins: [
+			swc.rollup({
+				jsc: {
+					target: "es5",
+					parser: {
+						syntax: "typescript",
+						tsx: true,
+					},
+				},
+			}),
+		],
+	},
+	{
+		name: "Legacy (Minified)",
+		entry: "./src/htswap.ts",
+		outDir: "dist-legacy-min",
+		target: false,
+		platform: "browser",
+		format: ["commonjs", "esm"],
+		dts: true,
+		banner: {
+			js: banner,
+		},
+		plugins: [
+			swc.rollup({
+				jsc: {
+					target: "es5",
+					parser: {
+						syntax: "typescript",
+						tsx: true,
+					},
+					minify: {
+						compress: {
+							unused: true,
+						},
+						mangle: true,
+					},
+				},
+				minify: true,
+			}),
+		],
+	},
+	{
+		name: "Compatible",
 		entry: "./src/htswap.ts",
 		outDir: "dist-compat",
 		platform: "browser",
@@ -11,7 +67,20 @@ export default defineConfig([
 		format: ["commonjs", "esm"],
 		dts: true,
 		banner: {
-			js: `// ${pkg.name}-${(pkg as any).version || "dev"}-${pkg.repository.url}`,
+			js: banner,
+		},
+	},
+	{
+		name: "Compatible (Minified)",
+		entry: "./src/htswap.ts",
+		outDir: "dist-compat-min",
+		minify: true,
+		platform: "browser",
+		target: "es2015",
+		format: ["commonjs", "esm"],
+		dts: true,
+		banner: {
+			js: banner,
 		},
 	},
 	{
@@ -23,11 +92,11 @@ export default defineConfig([
 		format: ["commonjs", "esm", "es"],
 		dts: true,
 		banner: {
-			js: `// ${pkg.name}-${(pkg as any).version || "dev"}-${pkg.repository.url}`,
+			js: banner,
 		},
 	},
 	{
-		name: "Modern Minified",
+		name: "Modern (Minified)",
 		entry: "./src/htswap.ts",
 		outDir: "dist-min",
 		minify: true,
@@ -36,20 +105,7 @@ export default defineConfig([
 		format: ["commonjs", "esm", "es"],
 		dts: true,
 		banner: {
-			js: `// ${pkg.name}-${(pkg as any).version || "dev"}-${pkg.repository.url}`,
-		},
-	},
-	{
-		name: "Compatiblity Minified",
-		entry: "./src/htswap.ts",
-		outDir: "dist-min-compat",
-		minify: true,
-		platform: "browser",
-		target: "es2015",
-		format: ["commonjs", "esm"],
-		dts: true,
-		banner: {
-			js: `// ${pkg.name}-${(pkg as any).version || "dev"}-${pkg.repository.url}`,
+			js: banner,
 		},
 	},
 ]);
