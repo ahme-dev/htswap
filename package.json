@@ -20,7 +20,8 @@
 	"files": [
 		"dist",
 		"dist-min",
-		"dist-compat"
+		"dist-compat",
+		"dist-legacy"
 	],
 	"main": "./dist/htswap.cjs",
 	"types": "./dist/htswap.d.ts",

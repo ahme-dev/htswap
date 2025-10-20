@@ -36,7 +36,6 @@ Extra:
 - **Smart Targeting**: Automatically match partial server responses to elements on page
 - **Target Aliases**: Swap content with different elements on the server
 - **Swap Modes**: Swap content in different ways (innerHTML, outerHTML, etc.)
-- [ ] **Preload Anchors**: Fetch anchor content on page load for instant swaps
 
 ## 📦 Installation
 
