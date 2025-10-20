@@ -28,13 +28,14 @@ Based on a number of other libraries, see [why it exists](#-why).
 - **Normal Fragments**: Anchor links (#) work within swapped content, in-page and across pages
 - **Maintained Scroll**: Scroll position between swap history is maintained
 
-**To be re-added:**
+Extra:
 
-- [ ] **Loading States**: Loading state can be styled (through `aria-busy="true"`)
-- [X] **Multiple Targets**: Swap multiple elements at once
-- [ ] **History Modes**: Swap without url changes or replace the url than pushing to it
-- [ ] **Merge Modes**: Swap content in different ways (innerHTML, outerHTML, etc.)
-- [ ] **Target Aliases**: Swap content with different elements on the server
+- **Loading States**: Loading state can be styled (through `aria-busy="true"`)
+- **Multiple Targets**: Swap multiple elements at once
+- **History Modes**: Swap without url changes or replace the url than pushing to it
+- **Smart Targeting**: Automatically match partial server responses to elements on page
+- **Target Aliases**: Swap content with different elements on the server
+- **Swap Modes**: Swap content in different ways (innerHTML, outerHTML, etc.)
 - [ ] **Preload Anchors**: Fetch anchor content on page load for instant swaps
 
 ## 📦 Installation
@@ -43,8 +44,10 @@ There are several build/distribution variants:
 
 - `dist`: modern and default (es2020)
 - `dist-compat`: compatible with older browsers (es2015)
+- `dist-legacy`: legacy support (es5)
 - `dist-min`: same as `dist` but minified
 - `dist-min-compat`: same as `dist-compat` but minified
+- `dist-min-legacy`: same as `dist-legacy` but minified
 
 Any of the variants can be installed through the following methods:
 
