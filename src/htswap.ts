@@ -19,8 +19,9 @@ export async function update(
 	body?: BodyInit,
 ) {
 	const hist = trigger
-		?.closest("[data-hthistory]")
-		?.getAttribute("data-hthistory");
+		? trigger?.closest("[data-hthistory]")?.getAttribute("data-hthistory") ||
+			"push"
+		: "none";
 
 	const scrollY = window.scrollY;
 	let targets = [] as Target[];
@@ -125,7 +126,7 @@ export async function update(
 		}
 
 		// save scroll level before pushing history changes
-		if (!hist || hist === "push") {
+		if (hist === "push") {
 			history.replaceState(
 				{ ...history.state, scrollY } satisfies HistoryState,
 				"",
@@ -134,7 +135,7 @@ export async function update(
 
 		// push or replace history
 
-		if (!hist || hist === "push")
+		if (hist === "push")
 			history.pushState({ selector } satisfies HistoryState, "", url);
 		else if (hist === "replace")
 			history.replaceState({ selector } satisfies HistoryState, "", url);
