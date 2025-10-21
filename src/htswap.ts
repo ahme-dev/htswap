@@ -14,11 +14,14 @@ type HistoryState = {
 export async function update(
 	selector: string,
 	url: string,
-	hist?: string,
 	trigger?: Element,
 	newScrollY?: number,
 	body?: BodyInit,
 ) {
+	const hist = trigger
+		?.closest("[data-hthistory]")
+		?.getAttribute("data-hthistory");
+
 	const scrollY = window.scrollY;
 	let targets = [] as Target[];
 
@@ -154,7 +157,7 @@ export async function update(
 	}
 }
 
-// bind elements
+// bind targets
 export async function bind() {
 	for (const el of document.querySelectorAll(
 		"[data-htswap]:not([data-htbound])" +
@@ -185,7 +188,6 @@ export async function bind() {
 						: url +
 								(url.includes("?") ? "&" : "?") +
 								new URLSearchParams(data as unknown as string),
-					el.dataset.hthistory,
 					el,
 					undefined,
 					// only add form data as body when POST
@@ -195,11 +197,11 @@ export async function bind() {
 			return;
 		}
 
-		// bind elements (currently anchors)
+		// bind anchors
 
 		el.onclick = async (e) => {
 			e.preventDefault();
-			await update(el.dataset.htswap || "body", url, el.dataset.hthistory, el);
+			await update(el.dataset.htswap || "body", url, el);
 		};
 	}
 }
@@ -217,7 +219,6 @@ export function init() {
 		update(
 			(e.state as HistoryState)?.selector || "body",
 			location.href,
-			"none",
 			undefined,
 			(e.state as HistoryState)?.scrollY,
 		),
