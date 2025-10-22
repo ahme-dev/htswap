@@ -220,25 +220,25 @@ Individual elements under `data-htswap` can be opted out of swapping, using `dat
 
 It is recommended for the backend to check the `x-htswap` header, and only return partial content if it's present, otherwise return the full page to avoid users who have js disabled from seeing partial content as a page.
 
-## ❓ Why? 
+## ❓ Why?
 
 With this section being personal reasoning, I'll first go through similar libraries/scripts, detailing what I don't like about them:
 
-- [`Swap.js`](https://github.com/josephernest/Swap.js): 450b gzipped, no form support, no history or merge modes, old codebase.
-- [`Alpine-AJAX`](https://alpine-ajax.js.org/): 3kb gzipped, requires `alpinejs` to work which adds 10kb+.
-- [`HTMZ`](https://leanrada.com/htmz/): 160b gzipped, noticeable 1-2 second delay on the first click, no history or merge modes, elements don't work when js is turned off. 
-- [`HTMX`](https://htmx.org/): 11kb gzipped, too large, too flexible and verbose, decides that other elements (e.g. buttons, divs) should make ajax requests.
-- [`zjax`](https://www.zjax.dev/): 5kb gzipped, includes client-side interactivity logic, disregards built-in anchor/form logic.
-- [`data-star`](https://data-star.dev/): 10kb gzipped, too large, covers too much ground, includes client-side interactivity logic, disregards built-in anchor/form logic, needs backend integration (potentially outdated point).
+- [`Swap.js`](https://github.com/josephernest/Swap.js): 450b gzipped, no form support, no history or merge modes. This was actually the inspiration for `htswap`, but it needed modernization and more features.
+- [`Alpine-AJAX`](https://alpine-ajax.js.org/): 3.59kb gzipped, requires Alpine.js to work which adds ~15kb. Great if you're already using Alpine, but that's an 18kb total commitment for just AJAX swapping.
+- [`HTMZ`](https://leanrada.com/htmz/): 166b gzipped, clever iframe hack but has a noticeable delay on first click, no history or merge modes.
+- [`HTMX`](https://htmx.org/): 14-16kb gzipped, powerful but too large for my needs, encourages non-semantic patterns like making divs and buttons trigger requests instead of using proper anchors/forms.
+- [`zjax`](https://www.zjax.dev/): 4.9kb gzipped, bundles client-side interactivity which I want to handle separately, overrides native anchor/form behaviors rather than progressively enhancing them.
+- [`data-star`](https://data-star.dev/): 10.68kb gzipped, ambitious reactive framework but too heavy, treats forms as an afterthought with its signals-first approach, requires buying into its entire paradigm.
 
-Your usecase or preference might align with one of the above, but I needed `htswap`, which:
+Your use case or preference might align with one of the above, but I needed `htswap`, which:
 
-- Doesn't go above 2kb (gzipped) in size.
-- Doesn't include anything more than enhancements for anchors/forms.
-- Doesn't break existing anchor/form functionality.
-- Doesn't force you to use its aproach for client-side interactivity.
-- Doesn't require site users to use JS.
-- Doesn't need any other library to work.
-- Doesn't care about the backend tech.
+- Doesn't exceed 2kb (gzipped) in size.
+- Doesn't include anything beyond anchor/form enhancements.
+- Doesn't break existing anchor/form functionality when JS is disabled.
+- Doesn't impose opinions about client-side interactivity.
+- Doesn't require users to have JavaScript for basic functionality.
+- Doesn't depend on any other library.
+- Doesn't care about your backend technology.
 
-This is obviously subject to change as `htswap` reaches v1. More can be integrated from the great alternatives mentioned above.
+This is obviously subject to change as `htswap` reaches v1, and more can be integrated from the excellent alternatives mentioned above.
