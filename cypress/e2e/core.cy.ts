@@ -10,7 +10,7 @@ describe("Dynamic Content", () => {
 				<html>
 					${head}
 					<body>
-						<div data-htbind>
+						<div data-htswap>
 							<nav>
 								<a id='about-link' href='/about'>About</a>
 							</nav>
@@ -62,7 +62,7 @@ describe("Dynamic Content", () => {
 				<html>
 					${head}
 					<body>
-						<div data-htbind>
+						<div data-htswap>
 							<form id='search-form' method='GET' action='/search'>
 								<input type='text' name='q' placeholder='Search...' />
 								<button type='submit'>Search</button>
@@ -118,7 +118,7 @@ describe("Dynamic Content", () => {
 						<script>window.__marker = Math.random();</script>
 					</head>
 					<body>
-						<div data-htbind>
+						<div data-htswap>
 							<nav>
 								<a id='about-link' href='/about'>About</a>
 							</nav>
@@ -160,7 +160,7 @@ describe("Dynamic Content", () => {
 });
 
 describe("Progressive Enhancement", () => {
-	it("Should be able to opt in specific anchors only", () => {
+	it("Should be able to opt in specific anchors", () => {
 		prepareHead().then((head) => {
 			cy.intercept("GET", "/", {
 				statusCode: 200,
@@ -241,7 +241,7 @@ describe("Progressive Enhancement", () => {
 		});
 	});
 
-	it("Should be able to opt in specific forms only", () => {
+	it("Should be able to opt in specific forms", () => {
 		prepareHead().then((head) => {
 			cy.intercept("GET", "/", {
 				statusCode: 200,
@@ -319,7 +319,7 @@ describe("Progressive Enhancement", () => {
 					${head}
 					<body>
 						<div>
-							<nav data-htbind>
+							<nav data-htswap>
 								<a id='about-link' href='/about'>About</a>
 								<a id='contact-link' href='/contact'>Contact</a>
 							</nav>
@@ -335,7 +335,7 @@ describe("Progressive Enhancement", () => {
 				statusCode: 200,
 				body: `
 				<div>
-					<nav data-htbind>
+					<nav data-htswap>
 						<a id='about-link' href='/about'>About</a>
 						<a id='contact-link' href='/contact'>Contact</a>
 					</nav>
@@ -349,7 +349,7 @@ describe("Progressive Enhancement", () => {
 				statusCode: 200,
 				body: `
 				<div>
-					<nav data-htbind>
+					<nav data-htswap>
 						<a id='about-link' href='/about'>About</a>
 						<a id='contact-link' href='/contact'>Contact</a>
 					</nav>
@@ -400,9 +400,9 @@ describe("Progressive Enhancement", () => {
 					${head}
 					<body>
 						<div>
-							<nav data-htbind>
+							<nav data-htswap>
 								<a id='about-link' href='/about'>About</a>
-								<a data-htbound id='contact-link' href='/contact'>Contact</a>
+								<a data-htlocked id='contact-link' href='/contact'>Contact</a>
 							</nav>
 							<main id='content'>
 								<h1>Home</h1>
@@ -416,9 +416,9 @@ describe("Progressive Enhancement", () => {
 				statusCode: 200,
 				body: `
 				<div>
-					<nav data-htbind>
+					<nav data-htswap>
 						<a id='about-link' href='/about'>About</a>
-						<a data-htbound id='contact-link' href='/contact'>Contact</a>
+						<a data-htlocked id='contact-link' href='/contact'>Contact</a>
 					</nav>
 					<main id='content'>
 						<h1>About</h1>
@@ -430,9 +430,9 @@ describe("Progressive Enhancement", () => {
 				statusCode: 200,
 				body: `
 				<div>
-					<nav data-htbind>
+					<nav data-htswap>
 						<a id='about-link' href='/about'>About</a>
-						<a data-htbound id='contact-link' href='/contact'>Contact</a>
+						<a data-htlocked id='contact-link' href='/contact'>Contact</a>
 					</nav>
 					<main id='content'>
 						<h1>Contact</h1>
@@ -480,12 +480,12 @@ describe("Progressive Enhancement", () => {
 				<html>
 					${head}
 					<body>
-						<div data-htbind>
+						<div data-htswap>
 							<form id='search-form' method='GET' action='/search'>
 								<input type='text' name='q' value='query1' />
 								<button type='submit'>Search</button>
 							</form>
-							<form data-htbound id='login-form' method='POST' action='/login'>
+							<form data-htlocked id='login-form' method='POST' action='/login'>
 								<input type='text' name='username' value='user' />
 								<button type='submit'>Login</button>
 							</form>
@@ -498,12 +498,12 @@ describe("Progressive Enhancement", () => {
 			cy.intercept("GET", "/search?q=query1", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<form id='search-form' method='GET' action='/search'>
 							<input type='text' name='q' value='query1' />
 							<button type='submit'>Search</button>
 						</form>
-						<form data-htbound id='login-form' method='POST' action='/login'>
+						<form data-htlocked id='login-form' method='POST' action='/login'>
 							<input type='text' name='username' value='user' />
 							<button type='submit'>Login</button>
 						</form>
@@ -668,7 +668,7 @@ describe("Preserved Inlines", () => {
 				<html>
 					${head}
 					<body>
-						<div data-htbind>
+						<div data-htswap>
 							<a id="load-content" href="/dashboard">Dashboard</a>
 							<main id="content">
 								<h1>Home</h1>
@@ -720,7 +720,7 @@ describe("Preserved Inlines", () => {
 				<html>
 					${head}
 					<body>
-						<div data-htbind>
+						<div data-htswap>
 							<a id="theme-toggle" href="/dark-mode">Dark Mode</a>
 							<main id="content">
 								<h1>Light Mode</h1>
@@ -772,7 +772,7 @@ describe("Working Head", () => {
 							${head.replace(/<head>|<\/head>/g, "")}
 						</head>
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="about-link" href="/about">About</a>
 								</nav>
@@ -793,7 +793,7 @@ describe("Working Head", () => {
 					<html>
 						<head><title>About Us - My Site</title></head>
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="about-link" href="/about">About</a>
 								</nav>
@@ -830,7 +830,7 @@ describe("Working Head", () => {
 							${head.replace(/<head>|<\/head>/g, "")}
 						</head>
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<form id="search-form" method="GET" action="/results">
 									<input type="text" name="q" value="product" />
 									<button type="submit">Search</button>
@@ -851,7 +851,7 @@ describe("Working Head", () => {
 					<html>
 						<head><title>Results for "product" - My Site</title></head>
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<main id="content">
 									<h1>Search Results</h1>
 									<p>Found 10 results</p>
@@ -896,7 +896,7 @@ describe("Working Head", () => {
 							${head.replace(/<head>|<\/head>/g, "")}
 						</head>
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="about-link" href="/about">About</a>
 								</nav>
@@ -919,7 +919,7 @@ describe("Working Head", () => {
 							<link rel="stylesheet" href="/styles/about.css">
 						</head>
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="about-link" href="/about">About</a>
 								</nav>
@@ -969,7 +969,7 @@ describe("Working Head", () => {
 							${head.replace(/<head>|<\/head>/g, "")}
 						</head>
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="about-link" href="/about">About</a>
 								</nav>
@@ -992,7 +992,7 @@ describe("Working Head", () => {
 							<script src="/scripts/about.js"></script>
 						</head>
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="about-link" href="/about">About</a>
 								</nav>
@@ -1071,7 +1071,7 @@ describe("Working Head", () => {
 							${head.replace(/<head>|<\/head>/g, "")}
 						</head>
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="dashboard-link" href="/dashboard">Dashboard</a>
 								</nav>
@@ -1097,7 +1097,7 @@ describe("Working Head", () => {
 							<script src="/scripts/dashboard.js"></script>
 						</head>
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="dashboard-link" href="/dashboard">Dashboard</a>
 								</nav>
@@ -1150,7 +1150,7 @@ describe("History Support", () => {
 					<html>
 						${head}
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="about-link" href="/about">About</a>
 								</nav>
@@ -1206,7 +1206,7 @@ describe("History Support", () => {
 					<html>
 						${head}
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<form id="search-form" method="GET" action="/search">
 									<input type="text" name="q" value="test" />
 									<button type="submit">Search</button>
@@ -1264,7 +1264,7 @@ describe("History Support", () => {
 					<html>
 						${head}
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="about-link" href="/about">About</a>
 								</nav>
@@ -1322,7 +1322,7 @@ describe("History Support", () => {
 					<html>
 						${head}
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="products-link" href="/products">Products</a>
 								</nav>
@@ -1338,7 +1338,7 @@ describe("History Support", () => {
 			cy.intercept("GET", "/products", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<nav>
 							<a id="cart-link" href="/cart">Cart</a>
 						</nav>
@@ -1410,7 +1410,7 @@ describe("Normal Fragments", () => {
 					<html>
 						${head}
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="features-link" href="#features">Features</a>
 								</nav>
@@ -1454,7 +1454,7 @@ describe("Normal Fragments", () => {
 					<html>
 						${head}
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="docs-link" href="/docs">Documentation</a>
 								</nav>
@@ -1470,7 +1470,7 @@ describe("Normal Fragments", () => {
 			cy.intercept("GET", "/docs", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<nav>
 							<a id="api-link" href="#api-reference">API Reference</a>
 						</nav>
@@ -1518,7 +1518,7 @@ describe("Normal Fragments", () => {
 					<html>
 						${head}
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="pricing-link" href="/pricing#enterprise">Enterprise Pricing</a>
 								</nav>
@@ -1534,7 +1534,7 @@ describe("Normal Fragments", () => {
 			cy.intercept("GET", "/pricing", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<main id="content">
 							<section id="basic" style="height: 2000px; background: lightyellow;">
 								<h2>Basic Plan</h2>
@@ -1577,7 +1577,7 @@ describe("Normal Fragments", () => {
 					<html>
 						${head}
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="blog-link" href="/blog#latest">Latest Posts</a>
 								</nav>
@@ -1593,7 +1593,7 @@ describe("Normal Fragments", () => {
 			cy.intercept("GET", "/blog", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<nav>
 							<a id="archive-link" href="/archive#2024">2024 Archive</a>
 						</nav>
@@ -1610,7 +1610,7 @@ describe("Normal Fragments", () => {
 			cy.intercept("GET", "/archive", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<section style="height: 2000px; background: lightcyan;">
 							<h1>Archive</h1>
 						</section>
@@ -1665,7 +1665,7 @@ describe("Normal Fragments", () => {
 					<html>
 						${head}
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="guide-link" href="/guide#introduction">Guide</a>
 								</nav>
@@ -1681,7 +1681,7 @@ describe("Normal Fragments", () => {
 			cy.intercept("GET", "/guide", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<nav>
 							<a id="tutorial-link" href="/tutorial#setup">Tutorial</a>
 						</nav>
@@ -1700,7 +1700,7 @@ describe("Normal Fragments", () => {
 			cy.intercept("GET", "/tutorial", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<main id="content">
 							<section style="height: 2000px; background: azure;">
 								<h1>Tutorial</h1>
@@ -1806,7 +1806,7 @@ describe("Maintained Scroll", () => {
 				<html>
 					${head}
 					<body>
-						<div data-htbind>
+						<div data-htswap>
 							<nav>
 								<a id="products-link" href="/products">Products</a>
 							</nav>
@@ -1822,7 +1822,7 @@ describe("Maintained Scroll", () => {
 			cy.intercept("GET", "/products", {
 				statusCode: 200,
 				body: `
-				<div data-htbind>
+				<div data-htswap>
 					<main id="content" style="height: 3000px;">
 						<h1>Products</h1>
 						<p>Browse our catalog</p>
@@ -1860,7 +1860,7 @@ describe("Maintained Scroll", () => {
 				<html>
 					${head}
 					<body>
-						<div data-htbind>
+						<div data-htswap>
 							<form id="filter-form" method="GET" action="/products">
 								<select name="category">
 									<option value="electronics">Electronics</option>
@@ -1879,7 +1879,7 @@ describe("Maintained Scroll", () => {
 			cy.intercept("GET", "/products?category=electronics", {
 				statusCode: 200,
 				body: `
-				<div data-htbind>
+				<div data-htswap>
 					<main id="content" style="height: 3000px;">
 						<h1>Electronics</h1>
 						<p>Filtered products</p>

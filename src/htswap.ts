@@ -87,7 +87,7 @@ export async function update(
 			const serverEl = serverDoc.querySelector(serverSel) || serverDoc.body;
 
 			if (
-				!!trigger?.closest('[data-htbind="auto"]') &&
+				!!trigger?.closest('[data-htswap="auto"]') &&
 				clientSel === "body" &&
 				!hasBodyTag
 			) {
@@ -161,16 +161,21 @@ export async function update(
 // bind targets
 export async function bind() {
 	for (const el of document.querySelectorAll(
-		"[data-htswap]:not([data-htbound])" +
-			",[data-htbind] a:not([data-htbound])" +
-			",[data-htbind] form:not([data-htbound])",
+		"a[data-htswap]:not([data-htlocked])" +
+			",form[data-htswap]:not([data-htlocked])" +
+			",[data-htswap] a:not([data-htlocked])" +
+			",[data-htswap] form:not([data-htlocked])",
 	) as NodeListOf<HTMLElement>) {
-		el.setAttribute("data-htbound", "true");
+		el.setAttribute("data-htlocked", "true");
 
 		const url =
 			(el as HTMLFormElement).action ||
 			el.getAttribute("href") ||
 			location.href;
+
+		const selector = (
+			el.closest("[data-htswap]")?.getAttribute("data-htswap") || "body"
+		).replace(/^auto$/, "body");
 
 		// bind forms
 
@@ -182,7 +187,7 @@ export async function bind() {
 				const method = el.method.toUpperCase();
 
 				await update(
-					el.dataset.htswap || "body",
+					selector,
 					// add form data to url if GET
 					method === "POST"
 						? url
@@ -202,7 +207,7 @@ export async function bind() {
 
 		el.onclick = async (e) => {
 			e.preventDefault();
-			await update(el.dataset.htswap || "body", url, el);
+			await update(selector, url, el);
 		};
 	}
 }

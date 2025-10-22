@@ -170,7 +170,7 @@ describe("History Modes", () => {
 					<html>
 						${head}
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<nav>
 									<a id="push-link" href="/blog" data-hthistory="push">Blog</a>
 									<a id="replace-link" href="/archive" data-hthistory="replace">Archive</a>
@@ -186,7 +186,7 @@ describe("History Modes", () => {
 			cy.intercept("GET", "/blog", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<nav>
 							<a id="replace-link" href="/archive" data-hthistory="replace">Archive</a>
 						</nav>
@@ -200,7 +200,7 @@ describe("History Modes", () => {
 			cy.intercept("GET", "/archive", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<main id="content">
 							<h1>Archive</h1>
 							<p>Past posts</p>
@@ -231,7 +231,7 @@ describe("History Modes", () => {
 					<html>
 						${head}
 						<body>
-							<div data-htbind>
+							<div data-htswap>
 								<form id="push-form" method="GET" action="/search" data-hthistory="push">
 									<input type="text" name="q" value="javascript" />
 									<button type="submit">Search</button>
@@ -253,7 +253,7 @@ describe("History Modes", () => {
 			cy.intercept("GET", "/search?q=javascript", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<form id="replace-form" method="GET" action="/sort" data-hthistory="replace">
 							<select name="order">
 								<option value="recent">Recent</option>
@@ -269,7 +269,7 @@ describe("History Modes", () => {
 			cy.intercept("GET", "/sort?order=recent", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<main id="content">
 							<h1>Sorted by Recent</h1>
 						</main>
@@ -299,7 +299,7 @@ describe("History Modes", () => {
 				<html>
 					${head}
 					<body>
-						<div data-htbind>
+						<div data-htswap>
 							<nav>
 								<a id="push-link-1" href="/products" data-hthistory="push">Products</a>
 							</nav>
@@ -314,7 +314,7 @@ describe("History Modes", () => {
 			cy.intercept("GET", "/products", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<nav>
 							<a id="push-link-2" href="/cart" data-hthistory="push">Cart</a>
 						</nav>
@@ -328,7 +328,7 @@ describe("History Modes", () => {
 			cy.intercept("GET", "/cart", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<nav>
 							<a id="replace-link" href="/checkout" data-hthistory="replace">Checkout</a>
 						</nav>
@@ -342,7 +342,7 @@ describe("History Modes", () => {
 			cy.intercept("GET", "/checkout", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<main id="content">
 							<h1>Checkout</h1>
 							<p>Complete your order</p>
@@ -427,7 +427,7 @@ describe("History Modes", () => {
 				<html>
 					${head}
 					<body>
-						<div data-htbind>
+						<div data-htswap>
 							<form id="search-form" method="GET" action="/search" data-hthistory="push">
 								<input type="text" name="q" value="laptop" />
 								<button type="submit">Search</button>
@@ -443,7 +443,7 @@ describe("History Modes", () => {
 			cy.intercept("GET", "/search?q=laptop", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<form id="filter-form" method="GET" action="/filter" data-hthistory="push">
 							<select name="price">
 								<option value="low">Low to High</option>
@@ -460,7 +460,7 @@ describe("History Modes", () => {
 			cy.intercept("GET", "/filter?price=low", {
 				statusCode: 200,
 				body: `
-					<div data-htbind data-hthistory="replace">
+					<div data-htswap data-hthistory="replace">
 						<form id="update-form" method="GET" action="/update">
 							<input type="hidden" name="view" value="grid" />
 							<button type="submit">Grid View</button>
@@ -475,7 +475,7 @@ describe("History Modes", () => {
 			cy.intercept("GET", "/update?view=grid", {
 				statusCode: 200,
 				body: `
-					<div data-htbind>
+					<div data-htswap>
 						<main id="content">
 							<h1>Grid View</h1>
 							<p>Updated display</p>

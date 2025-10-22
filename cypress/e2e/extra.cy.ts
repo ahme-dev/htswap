@@ -142,7 +142,7 @@ describe("Loading States", () => {
         <html>
           ${head}
           <body>
-            <div data-htbind>
+            <div data-htswap>
               <nav>
 								<a id="profile-link" href="/profile">My Profile</a>
 							</nav>
@@ -161,7 +161,7 @@ describe("Loading States", () => {
 					statusCode: 200,
 					delay: 1000,
 					body: `
-          <div data-htbind>
+          <div data-htswap>
             <main id="content">
 							<h1>Profile</h1>
 							<p>User information</p>
@@ -194,7 +194,7 @@ describe("Loading States", () => {
         <html>
           ${head}
           <body>
-            <div data-htbind>
+            <div data-htswap>
               <form id="search-form" method="GET" action="/search">
 								<input type="text" name="q" value="laptop" />
 								<button type="submit">Search</button>
@@ -213,7 +213,7 @@ describe("Loading States", () => {
 					statusCode: 200,
 					delay: 1000,
 					body: `
-          <div data-htbind>
+          <div data-htswap>
             <main id="results">
 							<h2>Search Results</h2>
 							<p>Found 15 laptops</p>
@@ -320,7 +320,7 @@ describe("Auto Targeting", () => {
 			<!DOCTYPE html>
 			<html>
 				${head}
-				<body data-htbind="auto">
+				<body data-htswap="auto">
 					<div>
 						<nav>
 							<a id="update-link" href="/update-stats">Refresh Stats</a>
@@ -377,7 +377,7 @@ describe("Auto Targeting", () => {
 			<html>
 				${head}
 				<body>
-					<div data-htbind="auto">
+					<div data-htswap="auto">
 						<nav>
 							<a id="sync-link" href="/sync">Sync Dashboard</a>
 						</nav>
@@ -441,7 +441,7 @@ describe("Auto Targeting", () => {
 			<!DOCTYPE html>
 			<html>
 				${head}
-				<body data-htbind="auto">
+				<body data-htswap="auto">
 					<div>
 						<form id="settings-form" method="POST" action="/update-settings">
 							<input type="checkbox" name="notifications" checked />
@@ -497,7 +497,7 @@ describe("Auto Targeting", () => {
 			<!DOCTYPE html>
 			<html>
 				${head}
-				<body data-htbind="auto">
+				<body data-htswap="auto">
 					<div>
 						<nav>
 							<a id="fullpage-link" href="/full-refresh">Full Page</a>
