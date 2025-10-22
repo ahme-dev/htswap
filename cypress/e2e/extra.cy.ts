@@ -546,6 +546,92 @@ describe("Auto Targeting", () => {
 			cy.get("#sidebar").should("not.exist");
 		});
 	});
+
+	it("Should integrate head with auto target", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/styles/home.css", {
+				statusCode: 200,
+				body: "body { background-color: white; }",
+			});
+
+			cy.intercept("GET", "/styles/gps.css", {
+				statusCode: 200,
+				body: "body { background-color: lightblue; }",
+			}).as("getGPSStyles");
+
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>Home</title>
+							<link rel="stylesheet" href="/styles/home.css">
+							${head.replace(/<head>|<\/head>/g, "")}
+						</head>
+						<body>
+							<div data-htswap="auto">
+								<nav>
+									<a id="connect-link" href="/connect">Connect Dashboard</a>
+								</nav>
+								<header id="header">
+									<h1>Dashboard</h1>
+									<p>Last updated: None</p>
+								</header>
+								<main id="content">
+									<p>Main content area</p>
+								</main>
+								<footer id="footer">
+									<p>Version 1.0</p>
+								</footer>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/connect", {
+				statusCode: 200,
+				body: `
+					<head>
+						<title>Home - Connected</title>
+						<link rel="stylesheet" href="/styles/gps.css">
+					</head>
+
+					<header id="header">
+						<h1>Dashboard</h1>
+						<p>Last updated: 10:30 AM</p>
+					</header>
+					<footer id="footer">
+						<p>Version 1.1</p>
+						<p>GPS Systems Connected</p>
+					</footer>
+				`,
+			}).as("getConnect");
+
+			cy.visit("/");
+
+			cy.get('link[href="/styles/home.css"]').should("exist");
+			cy.get('link[href="/styles/gps.css"]').should("not.exist");
+
+			cy.get("#header>p").should("contain.text", "Last updated: None");
+			cy.get("#footer").should("contain.text", "Version 1.0");
+			cy.get("#footer").should("not.contain.text", "GPS Systems Connected");
+
+			cy.get("#connect-link").click();
+			cy.wait("@getConnect");
+			cy.wait("@getGPSStyles");
+
+			cy.get('link[href="/styles/gps.css"]').should("exist");
+			cy.get("#content>p").should("include.text", "Main content area");
+
+			cy.get("#header").should("contain.text", "10:30 AM");
+			cy.get("#footer").should("contain.text", "Version 1.1");
+			cy.get("#footer").should("contain.text", "GPS Systems Connected");
+
+			cy.title().should("equal", "Home - Connected");
+		});
+	});
 });
 
 describe("Target Aliases", () => {
