@@ -226,7 +226,7 @@ With this section being personal reasoning, I'll first go through similar librar
 
 - [`Swap.js`](https://github.com/josephernest/Swap.js): 450b gzipped, no form support, no history or merge modes. This was actually the inspiration for `htswap`, but it needed modernization and more features.
 - [`Alpine-AJAX`](https://alpine-ajax.js.org/): 3.59kb gzipped, requires Alpine.js to work which adds ~15kb. Great if you're already using Alpine, but that's an 18kb total commitment for just AJAX swapping.
-- [`HTMZ`](https://leanrada.com/htmz/): 166b gzipped, clever iframe hack but has a noticeable delay on first click, no history or merge modes.
+- [`HTMZ`](https://leanrada.com/htmz/): 166b gzipped, clever iframe hack but has a noticeable delay on first click, no history or merge modes. Links are broken when JS is turned off, rather than working normally.
 - [`HTMX`](https://htmx.org/): 14-16kb gzipped, powerful but too large for my needs, encourages non-semantic patterns like making divs and buttons trigger requests instead of using proper anchors/forms.
 - [`zjax`](https://www.zjax.dev/): 4.9kb gzipped, bundles client-side interactivity which I want to handle separately, overrides native anchor/form behaviors rather than progressively enhancing them.
 - [`data-star`](https://data-star.dev/): 10.68kb gzipped, ambitious reactive framework but too heavy, treats forms as an afterthought with its signals-first approach, requires buying into its entire paradigm.
