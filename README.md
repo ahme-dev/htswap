@@ -62,7 +62,7 @@ Any of the variants can be installed through the following methods:
 
 ## 🛠️ Usage
 
-After making sure `htswap` is imported, the `data-htbind` attribute can be on any element to let its children work with `htswap` automatically.
+After making sure `htswap` is imported, the `data-htswap` attribute can be on any element to let its children work with `htswap` automatically.
 
 The attribute can be added on the `body` element to enable `htswap` on all the links and anchors in the site, without manually adding it to each element, if desired.
 
@@ -71,7 +71,7 @@ The attribute can be added on the `body` element to enable `htswap` on all the l
 Anchors automatically replace the whole page, replicating client-side behaviour. The `href` will determine which page to fetch for swapping.
 
 ```html
-<body data-htbind>
+<body data-htswap>
 	<nav>
 		<a href="/login">Login</a>
 		<a href="/signup">Sign Up</a>
@@ -98,7 +98,7 @@ They can be further enhanced by adding `data-htswap` on each of them and giving 
 </div>
 ```
 
-Note that the parent element having `data-htbind` is not necessary anymore as the elements themselves have it, though it doesn't conflict with it.
+Note that the parent element having `data-htswap` is not necessary anymore as the elements themselves have it, though it doesn't conflict with it.
 
 All swapping operations work with **browser history**, and navigating backward will swap back to the previous content, without a reload.
 
@@ -207,12 +207,12 @@ The `->` symbol can be used to specify an alias for the target element, which wi
 
 #### Opt Out
 
-Individual elements under `data-htbind` can be opted out of swapping, using `data-htbound`.
+Individual elements under `data-htswap` can be opted out of swapping, using `data-htlocked`.
 
 ```html
-<div data-htbind>
+<div data-htswap>
 	<!-- Prepared but set to act as native anchor for now -->
-	<a href="/products" data-htswap="#product-list" data-htbound>Products</a>
+	<a href="/products" data-htswap="#product-list" data-htlocked>Products</a>
 </div>
 ```
 
