@@ -263,6 +263,71 @@ describe("Dynamic Content", () => {
 			cy.get("#content").should("contain.text", "Welcome to our site");
 		});
 	});
+
+	it("Should prevent resubmit of forms during request", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body data-htswap>
+						<form id='search-form' method='GET' action='/search'>
+							<input type='text' name='q' placeholder='Search...' />
+							<button type='submit'>Search</button>
+						</form>
+						<div id='results'>No results yet</div>
+					</body>
+				</html>
+				`,
+			});
+			let searches = 0;
+			cy.intercept("GET", "/search?q=test", (req) => {
+				searches += 1;
+				return req.reply({
+					statusCode: 200,
+					delay: 3000,
+					body: `
+					<body data-htswap>
+						<form id='search-form' method='GET' action='/search'>
+							<input type='text' name='q' placeholder='Search...' />
+							<button type='submit'>Search</button>
+						</form>
+						<div id='results'>
+							<h2>Search Results (${searches})</h2>
+							<ul>
+								<li>Result 1</li>
+								<li>Result 2</li>
+							</ul>
+						</div>
+					</body>
+				`,
+				});
+			}).as("getSearch");
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("input[name='q']").type("test");
+			cy.get("#search-form").submit();
+			cy.get("#search-form [type='submit']").should("be.disabled");
+			cy.get("#search-form").submit();
+			cy.wait("@getSearch");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+
+			cy.get("#results>h2").should("contain.text", "Search Results (1)");
+		});
+	});
 });
 
 describe("Progressive Enhancement", () => {

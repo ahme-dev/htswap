@@ -14,7 +14,7 @@ type HistoryState = {
 export async function update(
 	selector: string,
 	url: string,
-	trigger?: Element,
+	trigger?: HTMLElement,
 	newScrollY?: number,
 	body?: BodyInit,
 ) {
@@ -186,6 +186,10 @@ export async function bind() {
 		if (el instanceof HTMLFormElement) {
 			el.onsubmit = async (e) => {
 				e.preventDefault();
+				const submitBtn = el.querySelector(
+					"[type='submit']",
+				) as HTMLButtonElement;
+				submitBtn.disabled = true;
 
 				const data = new FormData(el);
 				const method = el.method.toUpperCase();
@@ -203,6 +207,8 @@ export async function bind() {
 					// only add form data as body when POST
 					method === "POST" ? data : undefined,
 				);
+
+				submitBtn.disabled = false;
 			};
 			return;
 		}
