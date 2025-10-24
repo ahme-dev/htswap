@@ -45,10 +45,14 @@ export async function update(
 
 		// fetch update
 
+		const controller = new AbortController();
+		setTimeout(() => controller.abort(), 4e3);
+
 		const serverHtml = await fetch(url, {
 			method: body ? "POST" : "GET",
 			headers: { "x-htswap": selector },
 			body,
+			signal: controller.signal,
 		}).then((r) => r.text());
 
 		const hasBodyTag = /<body/i.test(serverHtml);
