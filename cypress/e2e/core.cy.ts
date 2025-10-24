@@ -157,6 +157,112 @@ describe("Dynamic Content", () => {
 			cy.get("#content").should("contain.text", "About Us");
 		});
 	});
+
+	it("Should swap dynamically with keyboard", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div data-htswap>
+							<nav>
+								<a id='about-link' href='/about'>About</a>
+							</nav>
+							<main id='content'>
+								<h1>Home</h1>
+								<p>Welcome to our site</p>
+							</main>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+					<main id='content'>
+						<h1>About Us</h1>
+						<p>Learn more about our company</p>
+					</main>
+				`,
+			}).as("getAbout");
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#about-link").focus();
+			cy.press(Cypress.Keyboard.Keys.ENTER);
+			cy.wait("@getAbout");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+
+			cy.get("#content").should("contain.text", "About Us");
+		});
+	});
+
+	it("Should not swap when ctrl is held", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div data-htswap>
+							<nav>
+								<a id='about-link' href='/about'>About</a>
+							</nav>
+							<main id='content'>
+								<h1>Home</h1>
+								<p>Welcome to our site</p>
+							</main>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+					<main id='content'>
+						<h1>About Us</h1>
+						<p>Learn more about our company</p>
+					</main>
+				`,
+			}).as("getAbout");
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#about-link").click({
+				ctrlKey: true,
+			});
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+
+			cy.get("#content").should("contain.text", "Welcome to our site");
+		});
+	});
 });
 
 describe("Progressive Enhancement", () => {

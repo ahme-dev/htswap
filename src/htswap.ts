@@ -211,6 +211,7 @@ export async function bind() {
 
 		el.onclick = async (e) => {
 			e.preventDefault();
+			if (e.ctrlKey) return;
 			await update(selector, url, el);
 		};
 	}
