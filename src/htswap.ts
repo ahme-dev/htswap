@@ -10,6 +10,50 @@ type HistoryState = {
 	scrollY?: number;
 };
 
+function solveHead(serverDoc: Document, mode: "replace" | "append") {
+	const title = serverDoc.querySelector("title");
+	if (title) document.querySelector("title")?.replaceWith(title);
+
+	const syncElements = (selector: string, attr: string): void => {
+		const serverUrls = new Set<string>();
+		for (const el of serverDoc.head.querySelectorAll(selector)) {
+			const url = el.getAttribute(attr);
+			if (!url) continue;
+			serverUrls.add(url);
+		}
+
+		if (mode === "replace") {
+			for (const el of document.head.querySelectorAll(selector)) {
+				const url = el.getAttribute(attr);
+				if (!url || serverUrls.has(url)) continue;
+				el.remove();
+			}
+		}
+
+		for (const el of serverDoc.head.querySelectorAll(selector)) {
+			const url = el.getAttribute(attr);
+			if (!url) continue;
+
+			const shouldReeval = el.hasAttribute("data-htreeval");
+			const existing = document.head.querySelector(
+				`${selector}[${attr}="${url}"]`,
+			);
+
+			if (existing && !shouldReeval) continue;
+			if (existing) existing.remove();
+
+			const clone = document.createElement(el.tagName.toLowerCase());
+			clone.setAttribute(attr, url);
+			if (el.tagName === "LINK") clone.setAttribute("rel", "stylesheet");
+			if (shouldReeval) clone.setAttribute("data-htreeval", "");
+			document.head.appendChild(clone);
+		}
+	};
+
+	syncElements("script[src]", "src");
+	syncElements("link[rel='stylesheet']", "href");
+}
+
 // update and do swaps
 export async function update(
 	selector: string,
@@ -18,12 +62,14 @@ export async function update(
 	newScrollY?: number,
 	body?: BodyInit,
 ) {
-	const hist = trigger
-		? trigger?.closest("[data-hthistory]")?.getAttribute("data-hthistory") ||
-			"push"
-		: "none";
-
+	const histMode = (
+		trigger
+			? trigger?.closest("[data-hthistory]")?.getAttribute("data-hthistory") ||
+				"push"
+			: "none"
+	) as "push" | "replace" | "none"; // here to be found before swap
 	const scrollY = window.scrollY;
+
 	let targets = [] as Target[];
 
 	try {
@@ -38,7 +84,6 @@ export async function update(
 			} satisfies Target;
 		});
 
-		// add aria-busy on targets
 		for (const t of targets) {
 			t.clientEl?.setAttribute("aria-busy", "true");
 		}
@@ -56,34 +101,14 @@ export async function update(
 		}).then((r) => r.text());
 
 		const hasBodyTag = /<body/i.test(serverHtml);
+		const hasHeadTag = /<head/i.test(serverHtml);
 		const serverDoc = new DOMParser().parseFromString(serverHtml, "text/html");
 
-		// use title from server response
-
-		const title = serverDoc.querySelector("title");
-		if (title) document.querySelector("title")?.replaceWith(title);
-
-		// run response's added head scripts
-		for (const script of serverDoc.head.querySelectorAll("script[src]")) {
-			const src = script.getAttribute("src");
-			if (src && !document.querySelector(`script[src="${src}"]`)) {
-				const newScript = document.createElement("script");
-				newScript.src = src;
-				document.head.appendChild(newScript);
-			}
-		}
-
-		// add response's added head stylesheets
-		for (const link of serverDoc.head.querySelectorAll(
-			"link[rel='stylesheet']",
-		)) {
-			const href = link.getAttribute("href");
-			if (href && !document.querySelector(`link[href="${href}"]`)) {
-				const newLink = document.createElement("link");
-				newLink.rel = "stylesheet";
-				newLink.href = href;
-				document.head.appendChild(newLink);
-			}
+		if (hasHeadTag) {
+			const headMode = (trigger
+				?.closest("[data-hthead]")
+				?.getAttribute("data-hthead") || "replace") as "replace" | "append";
+			solveHead(serverDoc, headMode);
 		}
 
 		for (const { clientEl, clientSel, serverSel, mode } of targets) {
@@ -129,24 +154,22 @@ export async function update(
 			}
 		}
 
-		// save scroll level before pushing history changes
-		if (hist === "push") {
+		// push or replace history
+
+		if (histMode === "push") {
+			// save scroll level before pushing history changes
 			history.replaceState(
 				{ ...history.state, scrollY } satisfies HistoryState,
 				"",
 			);
-		}
-
-		// push or replace history
-
-		if (hist === "push")
 			history.pushState({ selector } satisfies HistoryState, "", url);
-		else if (hist === "replace")
+		} else if (histMode === "replace")
 			history.replaceState({ selector } satisfies HistoryState, "", url);
 
 		// handle scrolling
 
 		const hash = new URL(url, location.href).hash;
+
 		// if a scroll level is provided (saved in history) scroll to that
 		if (newScrollY !== undefined) window.scrollTo(0, newScrollY);
 		// otherwise if hash exists, scroll there
@@ -155,7 +178,6 @@ export async function update(
 		else window.scrollTo(0, 0);
 	} catch (_e) {
 	} finally {
-		// remove aria-busy on targets
 		for (const t of targets) {
 			t.clientEl?.setAttribute("aria-busy", "false");
 		}

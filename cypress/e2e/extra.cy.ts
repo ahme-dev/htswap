@@ -971,4 +971,381 @@ describe("Swap Modes", () => {
 	});
 });
 
+describe("Head Modes", () => {
+	it("Should replace head by default", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/styles/product.css", {
+				statusCode: 200,
+				body: ".product-grid { display: grid; }",
+			});
+
+			cy.intercept("GET", "/styles/checkout.css", {
+				statusCode: 200,
+				body: ".checkout-form { max-width: 600px; }",
+			}).as("getCheckoutStyles");
+
+			cy.intercept("GET", "/scripts/product-analytics.js", {
+				statusCode: 200,
+				body: "window.__productPageView = true;",
+			});
+
+			cy.intercept("GET", "/scripts/checkout-analytics.js", {
+				statusCode: 200,
+				body: "window.__checkoutPageView = true;",
+			}).as("getCheckoutScript");
+
+			cy.intercept("GET", "/products", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>Products</title>
+							<link rel="stylesheet" href="/styles/product.css">
+							<script src="/scripts/product-analytics.js"></script>
+							${head.replace(/<head>|<\/head>/g, "")}
+						</head>
+						<body>
+							<div data-htswap>
+								<nav>
+									<a id="checkout-link" href="/checkout">Checkout</a>
+								</nav>
+								<main id="content">
+									<h1>Products</h1>
+								</main>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/checkout", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>Checkout</title>
+							<link rel="stylesheet" href="/styles/checkout.css">
+							<script src="/scripts/checkout-analytics.js"></script>
+						</head>
+						<body>
+							<div data-htswap>
+								<nav>
+									<a id="checkout-link" href="/checkout">Checkout</a>
+								</nav>
+								<main id="content">
+									<h1>Checkout</h1>
+								</main>
+							</div>
+						</body>
+					</html>
+				`,
+			}).as("getCheckout");
+
+			cy.visit("/products");
+
+			cy.get('link[href="/styles/product.css"]').should("exist");
+			cy.get('script[src="/scripts/product-analytics.js"]').should("exist");
+
+			cy.get("#checkout-link").click();
+			cy.wait("@getCheckout");
+			cy.wait("@getCheckoutStyles");
+			cy.wait("@getCheckoutScript");
+
+			cy.get('link[href="/styles/product.css"]').should("not.exist");
+			cy.get('script[src="/scripts/product-analytics.js"]').should("not.exist");
+			cy.get('link[href="/styles/checkout.css"]').should("exist");
+			cy.get('script[src="/scripts/checkout-analytics.js"]').should("exist");
+		});
+	});
+
+	it("Should append head if specified", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/styles/base.css", {
+				statusCode: 200,
+				body: "body { font-family: sans-serif; }",
+			});
+
+			cy.intercept("GET", "/styles/maps.css", {
+				statusCode: 200,
+				body: ".map-container { height: 400px; }",
+			}).as("getMapsStyles");
+
+			cy.intercept("GET", "/scripts/core.js", {
+				statusCode: 200,
+				body: "window.__coreLoaded = true;",
+			});
+
+			cy.intercept("GET", "/scripts/leaflet.js", {
+				statusCode: 200,
+				body: "window.__leafletLoaded = true;",
+			}).as("getLeafletScript");
+
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>Home</title>
+							<link rel="stylesheet" href="/styles/base.css">
+							<script src="/scripts/core.js"></script>
+							${head.replace(/<head>|<\/head>/g, "")}
+						</head>
+						<body>
+							<div data-htswap data-hthead="append">
+								<nav>
+									<a id="locations-link" href="/locations">Locations</a>
+								</nav>
+								<main id="content">
+									<h1>Home</h1>
+								</main>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/locations", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>Locations</title>
+							<link rel="stylesheet" href="/styles/maps.css">
+							<script src="/scripts/leaflet.js"></script>
+						</head>
+						<body>
+							<div data-htswap data-hthead="append">
+								<nav>
+									<a id="locations-link" href="/locations">Locations</a>
+								</nav>
+								<main id="content">
+									<h1>Locations</h1>
+									<div class="map-container"></div>
+								</main>
+							</div>
+						</body>
+					</html>
+				`,
+			}).as("getLocations");
+
+			cy.visit("/");
+
+			cy.get('link[href="/styles/base.css"]').should("exist");
+			cy.get('script[src="/scripts/core.js"]').should("exist");
+			cy.get('link[href="/styles/maps.css"]').should("not.exist");
+
+			cy.get("#locations-link").click();
+			cy.wait("@getLocations");
+			cy.wait("@getMapsStyles");
+			cy.wait("@getLeafletScript");
+
+			cy.get('link[href="/styles/base.css"]').should("exist");
+			cy.get('script[src="/scripts/core.js"]').should("exist");
+			cy.get('link[href="/styles/maps.css"]').should("exist");
+			cy.get('script[src="/scripts/leaflet.js"]').should("exist");
+
+			cy.window().its("__coreLoaded").should("be.true");
+			cy.window().its("__leafletLoaded").should("be.true");
+		});
+	});
+
+	it("Should re-evaluate scripts with data-htreeval", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/scripts/logic.js", {
+				statusCode: 200,
+				body: "window.__logicScriptLoaded = true;",
+			});
+
+			cy.intercept("GET", "/scripts/analytics.js", (req) => {
+				return req.reply({
+					statusCode: 200,
+					body: `
+						(function() {
+							if (document.readyState === 'loading') {
+								document.addEventListener('DOMContentLoaded', function() {
+									const current = parseInt(document.body.dataset.analyticsScriptLoaded || '0', 10);
+									document.body.dataset.analyticsScriptLoaded = String(current + 1);
+								});
+							} else {
+								const current = parseInt(document.body.dataset.analyticsScriptLoaded || '0', 10);
+								document.body.dataset.analyticsScriptLoaded = String(current + 1);
+							}
+						})();
+					`,
+				});
+			}).as("getAnalyticsScript");
+
+			cy.intercept("GET", "/scripts/tracker.js", (req) => {
+				return req.reply({
+					statusCode: 200,
+					body: `
+						(function() {
+							if (document.readyState === 'loading') {
+								document.addEventListener('DOMContentLoaded', function() {
+									const current = parseInt(document.body.dataset.trackerScriptLoaded || '0', 10);
+									document.body.dataset.trackerScriptLoaded = String(current + 1);
+								});
+							} else {
+								const current = parseInt(document.body.dataset.trackerScriptLoaded || '0', 10);
+								document.body.dataset.trackerScriptLoaded = String(current + 1);
+							}
+						})();
+					`,
+				});
+			}).as("getTrackerScript");
+
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>Home</title>
+							<script src="/scripts/logic.js"></script>
+							<script src="/scripts/analytics.js" data-htreeval></script>
+							<script src="/scripts/tracker.js"></script>
+							${head.replace(/<head>|<\/head>/g, "")}
+						</head>
+						<body>
+							<div data-htswap>
+								<nav>
+									<a id="about-link" href="/about">About</a>
+								</nav>
+								<main id="content">
+									<h1>Home</h1>
+								</main>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>About</title>
+							<script src="/scripts/analytics.js" data-htreeval></script>
+							<script src="/scripts/tracker.js"></script>
+						</head>
+						<body>
+							<div data-htswap>
+								<nav>
+									<a id="about-link" href="/about">About</a>
+								</nav>
+								<main id="content">
+									<h1>About</h1>
+								</main>
+							</div>
+						</body>
+					</html>
+				`,
+			}).as("getAbout");
+
+			cy.visit("/");
+
+			cy.window().then((win) => {
+				expect(
+					(win as typeof win & { __logicScriptLoaded: boolean })
+						.__logicScriptLoaded,
+				).to.be.true;
+			});
+
+			cy.get('script[src="/scripts/logic.js"]').should("exist");
+
+			cy.get("#about-link").click();
+			cy.wait("@getAbout");
+			cy.wait("@getAnalyticsScript");
+			cy.wait("@getTrackerScript");
+
+			cy.get('script[src="/scripts/analytics.js"]').should("exist");
+			cy.get('script[src="/scripts/tracker.js"]').should("exist");
+
+			cy.get("@getAnalyticsScript.all").should("have.length", 2);
+			cy.get("@getTrackerScript.all").should("have.length", 1);
+
+			// script with reeval is executed twice while another without is executed once only
+			cy.get("body").should("have.attr", "data-analytics-script-loaded", "2");
+			cy.get("body").should("have.attr", "data-tracker-script-loaded", "1");
+		});
+	});
+
+	it("Should remove old styles when replacing", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/styles/theme-light.css", {
+				statusCode: 200,
+				body: "body { background: white; color: black; }",
+			});
+
+			cy.intercept("GET", "/styles/theme-dark.css", {
+				statusCode: 200,
+				body: "body { background: black; color: white; }",
+			}).as("getDarkTheme");
+
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>Light Theme</title>
+							<link rel="stylesheet" href="/styles/theme-light.css">
+							${head.replace(/<head>|<\/head>/g, "")}
+						</head>
+						<body>
+							<div data-htswap data-hthead="replace">
+								<nav>
+									<a id="dark-link" href="/dark">Dark Mode</a>
+								</nav>
+								<main id="content">
+									<h1>Light Theme</h1>
+								</main>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/dark", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						<head>
+							<title>Dark Theme</title>
+							<link rel="stylesheet" href="/styles/theme-dark.css">
+						</head>
+						<body>
+							<div data-htswap data-hthead="replace">
+								<nav>
+									<a id="dark-link" href="/dark">Dark Mode</a>
+								</nav>
+								<main id="content">
+									<h1>Dark Theme</h1>
+								</main>
+							</div>
+						</body>
+					</html>
+				`,
+			}).as("getDark");
+
+			cy.visit("/");
+			cy.get('link[href="/styles/theme-light.css"]').should("exist");
+
+			cy.get("#dark-link").click();
+			cy.wait("@getDark");
+			cy.wait("@getDarkTheme");
+
+			cy.get('link[href="/styles/theme-light.css"]').should("not.exist");
+			cy.get('link[href="/styles/theme-dark.css"]').should("exist");
+		});
+	});
+});
+
 describe("Preload", () => {});

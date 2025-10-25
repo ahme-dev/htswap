@@ -24,7 +24,7 @@ Based on a number of other libraries, see [why it exists](#-why).
 - **Graceful Degradation**: If JS is turned off, your anchors and forms will work as normal
 - **Preserved Inlines**: Inline scripts and styles are preserved and work as expected
 - **Working Head**: Swapped head tags work as expected, including styles and scripts
-- **History Support**: Browser back/forward buttons will work seamlessly, without reloading
+- **History Support**: Browser back/forward buttons will work seamlessly
 - **Normal Fragments**: Anchor links (#) work within swapped content, in-page and across pages
 - **Maintained Scroll**: Scroll position between swap history is maintained
 
@@ -33,7 +33,8 @@ Extra:
 - **Loading States**: Loading state can be styled (through `aria-busy="true"`)
 - **Multiple Targets**: Swap multiple elements at once
 - **History Modes**: Swap without url changes or replace the url than pushing to it
-- **Smart Targeting**: Automatically match partial server responses to elements on page
+- **Head Modes**: Can append head elements rather than replace, or re-eval existing scripts, as needed
+- **Smart Targeting**: Able to automatically match partial server responses to elements on page
 - **Target Aliases**: Swap content with different elements on the server
 - **Swap Modes**: Swap content in different ways (innerHTML, outerHTML, etc.)
 

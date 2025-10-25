@@ -28,7 +28,7 @@ jobs:
         with:
           install: false
           build: pnpm run build
-          command: pnpm run test:ci
+          command: pnpm run test
 
   test-push:
     if: github.event_name == 'push'
@@ -51,4 +51,4 @@ jobs:
         with:
           install: false
           build: pnpm run build
-          command: pnpm run test:ci
+          command: pnpm run test
