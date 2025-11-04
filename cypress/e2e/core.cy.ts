@@ -716,6 +716,163 @@ describe("Progressive Enhancement", () => {
 			cy.get("#content").should("contain.text", "Logged in");
 		});
 	});
+
+	it("Should swap a certain target dynamically", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div data-htswap="#content">
+							<nav>
+								<a id='about-link' href='/about'>About</a>
+							</nav>
+							<main id='content'>
+								<h1>Home</h1>
+								<p>Welcome to our site</p>
+							</main>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+					<main id='content'>
+						<h1>About Us</h1>
+						<p>Learn more about our company</p>
+					</main>
+				`,
+			}).as("getAbout");
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#about-link").click();
+			cy.wait("@getAbout");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+
+			cy.get("#content").should("contain.text", "About Us");
+			cy.get("nav").should("contain.text", "About");
+		});
+	});
+
+	it("Should swap response body into target if target doesn't exist on response", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div>
+							<nav data-htswap="#content">
+								<a id='about-link' href='/about'>About</a>
+							</nav>
+							<main id='content'>
+								<h1>Home</h1>
+								<p>Welcome to our site</p>
+							</main>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+					<main>
+						<h1>Error occured</h1>
+					</main>
+				`,
+			}).as("getAbout");
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#about-link").click();
+			cy.wait("@getAbout");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+
+			cy.get("#content").should("contain.text", "Error occured");
+			cy.get("nav").should("contain.text", "About");
+		});
+	});
+
+	it("Should not swap if target doesn't exist on client", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div>
+							<nav data-htswap="#content">
+								<a id='about-link' href='/about'>About</a>
+							</nav>
+							<main>
+								<h1>Home</h1>
+								<p>Welcome to our site</p>
+							</main>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+					<main data-htswap="#content">
+						<h1>About Us</h1>
+					</main>
+				`,
+			}).as("getAbout");
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#about-link").click();
+			cy.wait("@getAbout");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+
+			cy.get("main").should("contain", "Welcome to our site");
+			cy.get("nav").should("contain.text", "About");
+		});
+	});
 });
 
 describe("Graceful Degradation", () => {
