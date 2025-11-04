@@ -2030,6 +2030,265 @@ describe("Normal Fragments", () => {
 	});
 });
 
+describe("Redirects Handled", () => {
+	it("Should handle redirect from link navigation", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div data-htswap>
+								<nav>
+									<a id="old-page-link" href="/old-page">Old Page</a>
+								</nav>
+								<main id="content">
+									<h1>Home</h1>
+								</main>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/old-page", {
+				statusCode: 302,
+				headers: {
+					Location: "/new-page",
+				},
+			}).as("getOldPage");
+
+			cy.intercept("GET", "/new-page", {
+				statusCode: 200,
+				body: `
+					<main id="content">
+						<h1>New Page</h1>
+						<p>You've been redirected</p>
+					</main>
+				`,
+			}).as("getNewPage");
+
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#old-page-link").click();
+			cy.wait("@getOldPage");
+			cy.wait("@getNewPage");
+
+			cy.get("#content").should("contain.text", "New Page");
+			cy.location("pathname").should("equal", "/new-page");
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+		});
+	});
+
+	it("Should handle POST-Redirect-GET pattern", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div data-htswap>
+								<form id="create-form" method="POST" action="/create">
+									<input type="text" name="title" value="Test Item" />
+									<button type="submit">Create</button>
+								</form>
+								<main id="content">
+									<h1>Create New Item</h1>
+								</main>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("POST", "/create", {
+				statusCode: 303,
+				headers: {
+					Location: "/items/123",
+				},
+			}).as("postCreate");
+
+			cy.intercept("GET", "/items/123", {
+				statusCode: 200,
+				body: `
+					<main id="content">
+						<h1>Item Created</h1>
+						<p>Test Item has been created successfully</p>
+					</main>
+				`,
+			}).as("getItem");
+
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#create-form").submit();
+			cy.wait("@postCreate");
+			cy.wait("@getItem");
+
+			cy.get("#content").should("contain.text", "Item Created");
+			cy.location("pathname").should("equal", "/items/123");
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+		});
+	});
+
+	it("Should handle multiple redirects", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div data-htswap>
+								<nav>
+									<a id="redirect-link" href="/redirect-1">Go to Page</a>
+								</nav>
+								<main id="content">
+									<h1>Home</h1>
+								</main>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/redirect-1", {
+				statusCode: 302,
+				headers: {
+					Location: "/redirect-2",
+				},
+			}).as("getRedirect1");
+
+			cy.intercept("GET", "/redirect-2", {
+				statusCode: 302,
+				headers: {
+					Location: "/final-page",
+				},
+			}).as("getRedirect2");
+
+			cy.intercept("GET", "/final-page", {
+				statusCode: 200,
+				body: `
+					<main id="content">
+						<h1>Final Destination</h1>
+						<p>After multiple redirects</p>
+					</main>
+				`,
+			}).as("getFinalPage");
+
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#redirect-link").click();
+			cy.wait("@getRedirect1");
+			cy.wait("@getRedirect2");
+			cy.wait("@getFinalPage");
+
+			cy.get("#content").should("contain.text", "Final Destination");
+			cy.location("pathname").should("equal", "/final-page");
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+		});
+	});
+
+	it("Should preserve hash fragments through redirects", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div data-htswap>
+								<nav>
+									<a id="docs-link" href="/docs-old#api">API Docs</a>
+								</nav>
+								<main id="content">
+									<h1>Home</h1>
+								</main>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+
+			cy.intercept("GET", "/docs-old", {
+				statusCode: 301,
+				headers: {
+					Location: "/docs-new",
+				},
+			}).as("getDocsOld");
+
+			cy.intercept("GET", "/docs-new", {
+				statusCode: 200,
+				body: `
+					<main id="content">
+						<section style="height: 2000px; background: lightblue;">
+							<h1>Documentation</h1>
+						</section>
+						<section id="api" style="height: 2000px; background: lightcoral;">
+							<h2>API Reference</h2>
+						</section>
+					</main>
+				`,
+			}).as("getDocsNew");
+
+			cy.visit("/");
+
+			cy.get("#docs-link").click();
+			cy.wait("@getDocsOld");
+			cy.wait("@getDocsNew");
+
+			cy.location("pathname").should("equal", "/docs-new");
+			cy.location("hash").should("equal", "#api");
+
+			cy.get("#api").should("exist");
+			cy.wait(100);
+
+			cy.get("#api").should("be.visible");
+			cy.window().then((win) => {
+				const el = win.document.getElementById("api");
+				expect(el).to.not.be.null;
+				const rect = el?.getBoundingClientRect();
+				expect(rect?.top).to.be.lessThan(150);
+			});
+		});
+	});
+});
+
 describe("Maintained Scroll", () => {
 	it("Should maintain scroll position of previous swaps", () => {
 		prepareHead().then((head) => {

@@ -93,12 +93,19 @@ export async function update(
 		const controller = new AbortController();
 		setTimeout(() => controller.abort(), 4e3);
 
-		const serverHtml = await fetch(url, {
+		const response = await fetch(url, {
 			method: body ? "POST" : "GET",
 			headers: { "x-htswap": selector },
 			body,
 			signal: controller.signal,
-		}).then((r) => r.text());
+		});
+
+		const originalUrl = new URL(url, location.href);
+		const finalUrl = new URL(response.url);
+		if (!finalUrl.hash && originalUrl.hash) {
+			finalUrl.hash = originalUrl.hash;
+		}
+		const serverHtml = await response.text();
 
 		const hasBodyTag = /<body/i.test(serverHtml);
 		const hasHeadTag = /<head/i.test(serverHtml);
@@ -168,13 +175,13 @@ export async function update(
 				{ ...history.state, scrollY } satisfies HistoryState,
 				"",
 			);
-			history.pushState({ selector } satisfies HistoryState, "", url);
+			history.pushState({ selector } satisfies HistoryState, "", finalUrl);
 		} else if (histMode === "replace")
-			history.replaceState({ selector } satisfies HistoryState, "", url);
+			history.replaceState({ selector } satisfies HistoryState, "", finalUrl);
 
 		// handle scrolling
 
-		const hash = new URL(url, location.href).hash;
+		const hash = new URL(finalUrl, location.href).hash;
 
 		// if a scroll level is provided (saved in history) scroll to that
 		if (newScrollY !== undefined) window.scrollTo(0, newScrollY);

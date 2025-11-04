@@ -19,14 +19,15 @@ Based on a number of other libraries, see [why it exists](#-why).
 
 ## ✴️️ Features
 
-- **Dynamic Content**: Content on the page will be swapped dynamically, without reloading
+- **Dynamic Content**: Content on the page is swapped dynamically, without reloading
 - **Progressive Enhancement**: Anchors and forms (or whole sections) can be opted in by a single attribute
-- **Graceful Degradation**: If JS is turned off, your anchors and forms will work as normal
+- **Graceful Degradation**: If JS is turned off, your anchors and forms still work
 - **Preserved Inlines**: Inline scripts and styles are preserved and work as expected
 - **Working Head**: Swapped head tags work as expected, including styles and scripts
-- **History Support**: Browser back/forward buttons will work seamlessly
+- **History Support**: Browser back/forward buttons work seamlessly
 - **Normal Fragments**: Anchor links (#) work within swapped content, in-page and across pages
 - **Maintained Scroll**: Scroll position between swap history is maintained
+- **Redirects Handled**: Redirects are followed, including PRG pattern
 
 Extra:
 
