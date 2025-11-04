@@ -148,9 +148,15 @@ export async function update(
 			for (const s of document
 				.querySelector(clientSel)
 				?.querySelectorAll("script") || []) {
-				const n = document.createElement("script");
-				n.textContent = s.textContent;
-				s.replaceWith(n);
+				if (s.src) {
+					const n = document.createElement("script");
+					n.src = s.src;
+					s.replaceWith(n);
+				} else {
+					const n = document.createElement("script");
+					n.textContent = s.textContent;
+					s.replaceWith(n);
+				}
 			}
 		}
 

@@ -882,6 +882,69 @@ describe("Preserved Inlines", () => {
 		});
 	});
 
+	it("Should preserve external scripts during swap", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/scripts/counter.js", {
+				statusCode: 200,
+				body: "window.__scriptCounter = (window.__scriptCounter || 0) + 1;",
+			});
+
+			cy.intercept("GET", "/scripts/dashboard.js", {
+				statusCode: 200,
+				body: "window.__dashboardCounter = (window.__dashboardCounter || 0) + 1;",
+			});
+
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div data-htswap>
+							<a id="load-content" href="/dashboard">Dashboard</a>
+							<main id="content">
+								<h1>Home</h1>
+								<script src="/scripts/counter.js"></script>
+							</main>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+
+			cy.intercept("GET", "/dashboard", {
+				statusCode: 200,
+				body: `
+					<main id="content">
+						<h1>Dashboard</h1>
+						<p>User statistics</p>
+						<script src="/scripts/dashboard.js"></script>
+					</main>
+				`,
+			}).as("getDashboard");
+
+			cy.visit("/");
+
+			cy.window().then((win) => {
+				expect(
+					(win as typeof win & { __scriptCounter: number }).__scriptCounter,
+				).to.equal(1);
+			});
+
+			cy.get("#load-content").click();
+			cy.wait("@getDashboard");
+
+			cy.get("#content").should("contain.text", "Dashboard");
+			cy.window().then((win) => {
+				expect(
+					(win as typeof win & { __dashboardCounter: number })
+						.__dashboardCounter,
+				).to.equal(1);
+			});
+		});
+	});
+
 	it("Should preserve inline styles during swap", () => {
 		prepareHead().then((head) => {
 			cy.intercept("GET", "/", {
