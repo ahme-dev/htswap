@@ -33,11 +33,11 @@ Extra:
 
 - **Loading States**: Loading state can be styled (through `aria-busy="true"`)
 - **Multiple Targets**: Swap multiple elements at once
-- **History Modes**: Swap without url changes or replace the url than pushing to it
-- **Head Modes**: Can append head elements rather than replace, or re-eval existing scripts, as needed
-- **Smart Targeting**: Able to automatically match partial server responses to elements on page
-- **Target Aliases**: Swap content with different elements on the server
-- **Swap Modes**: Swap content in different ways (innerHTML, outerHTML, etc.)
+- **History Modes**: Swap without URL changes or replace the URL rather than pushing to it
+- **Head Modes**: Can append head elements rather than replace, or re-eval existing scripts
+- **Auto Targeting**: Automatically match server response elements by ID to client elements
+- **Target Aliases**: Map server selectors to different client selectors
+- **Swap Modes**: Control how content is inserted (innerHTML, outerHTML, beforeend, etc.)
 
 ## 📦 Installation
 
@@ -100,7 +100,21 @@ They can be further enhanced by adding `data-htswap` on each of them and giving 
 </div>
 ```
 
-Note that the parent element having `data-htswap` is not necessary anymore as the elements themselves have it, though it doesn't conflict with it.
+Since `data-htswap` uses the closest parent selector, you can set it once on a parent instead of repeating it on each child:
+
+```html
+<div>
+	<!-- All these anchors will inherit data-htswap="#content" -->
+	<nav data-htswap="#content">
+		<a href="/posts">All Posts</a>
+		<a href="/posts?category=tech">Tech</a>
+		<a href="/posts?category=design">Design</a>
+	</nav>
+	<main id="content">
+		<!-- Post list -->
+	</main>
+</div>
+```
 
 All swapping operations work with **browser history**, and navigating backward will swap back to the previous content, without a reload.
 
@@ -127,7 +141,7 @@ Forms are also automatically enhanced and support targetting. And they will add 
 
 ### Multiple Targets
 
-Multiple targets can be specified by separating them with a comma, with full support for query selectors.
+Multiple targets can be specified by separating them with a comma, with full support for query selectors. Each target can have its own swap mode and alias.
 
 ```html
 <div>
@@ -145,27 +159,64 @@ Multiple targets can be specified by separating them with a comma, with full sup
 		<input type="hidden" name="product_id" value="123">
 		<button type="submit">Add to Cart</button>
 	</form>
-</div>	
-```
-
-### History
-
-Several modes of interacting with history are supported, with `push` being the default.
-
-- `push`: changes the URL but the user can navigate back to the previous URL. 
-- `replace`: changes the URL but the user can't navigate back. 
-- `none`: doesn't change the URL.
-
-```html
-<div>
-	<a href="/settings" data-htswap="#settings-panel" data-hthistory="none">Edit Profile</a>
-	<div id="settings-panel"></div>
 </div>
 ```
 
-### Merge Modes
+Swap modes and aliases can be mixed for different targets:
 
-The `data-htswap` attribute can include specific merge modes, using the `@` symbol, to determine how the content is inserted into the target.
+```html
+<div>
+	<ul id="notifications"></ul>
+	<span id="badge">0</span>
+
+	<!-- Append new notification to list, replace badge count -->
+	<a href="/new-notification"
+	   data-htswap="#notifications@afterbegin, #badge@innerHTML">
+		Check Notifications
+	</a>
+</div>
+```
+
+### History Modes
+
+The `data-hthistory` attribute controls how swaps interact with browser history. The `push` mode is the default and doesn't need to be specified.
+
+- `push` (default): Adds a new entry to browser history, allowing the user to navigate back.
+- `replace`: Updates the current history entry without adding a new one.
+- `none`: Performs the swap without changing the URL at all.
+
+```html
+<div>
+	<!-- Default push mode - adds to history -->
+	<a href="/products" data-htswap="#content">Products</a>
+
+	<!-- Replace mode - updates URL without adding to history -->
+	<a href="/products?sort=price" data-htswap="#content" data-hthistory="replace">Sort by Price</a>
+
+	<!-- None mode - swaps content without changing URL -->
+	<a href="/settings/modal" data-htswap="#modal" data-hthistory="none">Open Settings</a>
+
+	<main id="content"><!-- Content --></main>
+	<div id="modal"><!-- Modal --></div>
+</div>
+```
+
+Since `data-hthistory` uses the closest parent selector, you can set it on a container to apply to all child elements:
+
+```html
+<!-- All filtering links will use replace mode, not adding history entries -->
+<div data-htswap="#results" data-hthistory="replace">
+	<a href="/products?category=tech">Tech</a>
+	<a href="/products?category=books">Books</a>
+	<a href="/products?sort=price">By Price</a>
+	<a href="/products?sort=date">By Date</a>
+</div>
+<div id="results"><!-- Results --></div>
+```
+
+### Swap Modes
+
+The `data-htswap` attribute can include specific swap modes, using the `@` symbol, to determine how the content is inserted into the target.
 
 ```html
 <div>
@@ -179,13 +230,37 @@ The `data-htswap` attribute can include specific merge modes, using the `@` symb
 
 The following modes are available:
 
-- `outerHTML`: The default mode, which replaces the entire target element with the new content.
-- `innerHTML`: Replaces the inner content of the target element with the new content.
-- `afterbegin`: Inserts the new content inside the target element, as the first child.
-- `afterend`: Inserts the new content inside the target element, as the last child.
-- `beforebegin`: Inserts the new content as sibling of the target element, before it.
-- `beforeend`: Inserts the new content as sibling of the target element, after it.
+- `innerHTML`: The default mode, which replaces the inner content of the target element.
+- `outerHTML`: Replaces the entire target element with the new content.
+- `beforebegin`: Inserts the new content before the target element.
+- `afterbegin`: Inserts the new content inside the target element, before its first child.
+- `beforeend`: Inserts the new content inside the target element, after its last child.
+- `afterend`: Inserts the new content after the target element.
 - `remove`: Removes the target element.
+
+### Auto Targeting
+
+When `data-htswap="auto"` is used, elements with IDs in the server response are automatically matched and swapped with elements of the same ID on the client, without needing to specify each target explicitly.
+
+```html
+<body data-htswap="auto">
+	<header id="header">
+		<h1>Dashboard</h1>
+		<p>Last updated: 10:00 AM</p>
+	</header>
+	<main id="content">
+		<p>Main content</p>
+	</main>
+	<footer id="footer">
+		<p>Version 1.0</p>
+	</footer>
+
+	<!-- Only #header and #footer in the response will be swapped -->
+	<a href="/sync">Sync Header & Footer</a>
+</body>
+```
+
+This is useful when you want to update multiple specific sections without listing all their IDs, and you have control over the response structure.
 
 ### Target Aliases
 
@@ -205,6 +280,55 @@ The `->` symbol can be used to specify an alias for the target element, which wi
 </div>
 ```
 
+### Head Modes
+
+By default, head elements (stylesheets and scripts) are replaced when swapping content. This can be changed using `data-hthead` on the container element.
+
+```html
+<body data-htswap data-hthead="append">
+	<nav>
+		<a href="/locations">Locations Map</a>
+	</nav>
+	<main id="content">
+		<h1>Home</h1>
+	</main>
+</body>
+```
+
+The following modes are available:
+
+- `replace`: The default mode, which removes old head elements not present in the new response and adds new ones.
+- `append`: Keeps existing head elements and only adds new ones from the response.
+
+Like other `data-ht*` attributes, `data-hthead` uses the closest parent selector, so you can set different head modes for different sections of your application:
+
+```html
+<body data-htswap>
+	<!-- These pages will replace head elements (default) -->
+	<nav>
+		<a href="/products">Products</a>
+		<a href="/about">About</a>
+	</nav>
+
+	<!-- This section will append head elements instead -->
+	<aside data-hthead="append">
+		<a href="/tools/calculator">Calculator</a>
+		<a href="/tools/converter">Converter</a>
+	</aside>
+</body>
+```
+
+Additionally, scripts can be marked with `data-htreeval` to force them to re-execute on every swap, even if they already exist:
+
+```html
+<head>
+	<script src="/analytics.js" data-htreeval></script>
+	<script src="/core.js"></script>
+</head>
+```
+
+With this setup, `/analytics.js` will run on every swap, while `/core.js` will only load once.
+
 ### More
 
 #### Opt Out
@@ -217,6 +341,23 @@ Individual elements under `data-htswap` can be opted out of swapping, using `dat
 	<a href="/products" data-htswap="#product-list" data-htlocked>Products</a>
 </div>
 ```
+
+#### Ctrl+Click
+
+Holding Ctrl (or Cmd on Mac) while clicking a link will bypass htswap and perform a normal navigation, allowing users to open links in new tabs as expected.
+
+#### Loading States
+
+During a swap operation, `aria-busy="true"` is set on the document body and all target elements. This can be used to style loading states with CSS:
+
+```css
+[aria-busy="true"] {
+	opacity: 0.6;
+	pointer-events: none;
+}
+```
+
+For forms, the submit button is automatically disabled during the request to prevent duplicate submissions.
 
 #### No Script
 
