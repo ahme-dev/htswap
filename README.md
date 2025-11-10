@@ -4,7 +4,7 @@
 
 The aim of `htswap` is to be a small, simple solution for removing reloads and implementing seamless content swapping, while allowing no-js users of your site to still have a good experience.
 
-Based on a number of other libraries, see [why it exists](#-why).
+Inspired by a number of other libraries, see [why it exists](#-why).
 
 <br>
 
