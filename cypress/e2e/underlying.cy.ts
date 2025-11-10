@@ -986,4 +986,8 @@ describe("Smart Defaults", () => {
 			cy.get("#results>h2").should("contain.text", "Search Results (1)");
 		});
 	});
+
+	it("Request header");
+	it("Timeout");
+	it("Auto rebinding");
 });
