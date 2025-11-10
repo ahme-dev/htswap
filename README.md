@@ -20,8 +20,12 @@ Based on a number of other libraries, see [why it exists](#-why).
 ## ✴️️ Features
 
 - **Dynamic Content**: Content on the page is swapped dynamically, without reloading
-- **Progressive Enhancement**: Anchors and forms (or whole sections) can be opted in by a single attribute
+- **Progressive Enhancement**: Anchors, forms or whole sections can be opted in or out by a single attribute
 - **Graceful Degradation**: If JS is turned off, your anchors and forms still work
+- **Smart Defaults**: Built-in handling for browser shortcuts (Ctrl+Click), duplicate submission prevention, selector with server headers, request timeouts
+
+Core:
+
 - **Preserved Inlines**: Inline scripts and styles are preserved and work as expected
 - **Working Head**: Swapped head tags work as expected, including styles and scripts
 - **History Support**: Browser back/forward buttons work seamlessly
