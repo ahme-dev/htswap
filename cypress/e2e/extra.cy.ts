@@ -1237,6 +1237,7 @@ describe("Target Aliases", () => {
 			});
 			cy.get("#profile-section").should("contain.text", "John Doe");
 			cy.get("#profile-section").should("contain.text", "Software Engineer");
+			cy.get("nav").should("contain.text", "Load Profile");
 		});
 	});
 
@@ -1350,6 +1351,111 @@ describe("Target Aliases", () => {
 			cy.get("#side-panel").should("contain.text", "Quick Stats");
 			cy.get("#side-panel").should("contain.text", "Active users: 42");
 			cy.get("#main-content").should("contain.text", "Dashboard Overview");
+		});
+	});
+
+	it("Should fail gracefully if server alias doesn't exist", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div>
+								<nav>
+									<a id="load-link" data-htswap="#target->#profile" href="/user-data">Load Profile</a>
+								</nav>
+								<section id="profile">
+									<p>No profile loaded</p>
+								</section>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+			cy.intercept("GET", "/user-data", {
+				statusCode: 200,
+				body: `
+					<div id="updated-profile">
+						<h2>John Doe</h2>
+						<p>Software Engineer</p>
+					</div>
+				`,
+			}).as("getUserData");
+
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#load-link").click();
+			cy.wait("@getUserData");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+			cy.get("#profile").should("contain.text", "John Doe");
+			cy.get("#profile").should("contain.text", "Software Engineer");
+			cy.get("nav").should("contain.text", "Load Profile");
+		});
+	});
+
+	it("Should fail completely if client target doesn't exist", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+					<!DOCTYPE html>
+					<html>
+						${head}
+						<body>
+							<div>
+								<nav>
+									<a id="load-link" data-htswap="#target->#no-profile" href="/user-data">Load Profile</a>
+								</nav>
+								<section id="profile">
+									<p>No profile loaded</p>
+								</section>
+							</div>
+						</body>
+					</html>
+				`,
+			});
+			cy.intercept("GET", "/user-data", {
+				statusCode: 200,
+				body: `
+					<div id="target">
+						<h2>John Doe</h2>
+						<p>Software Engineer</p>
+					</div>
+				`,
+			}).as("getUserData");
+
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#load-link").click();
+			cy.wait("@getUserData");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+			cy.get("#profile").should("contain.text", "No profile loaded");
+			cy.get("nav").should("contain.text", "Load Profile");
 		});
 	});
 });

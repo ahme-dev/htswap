@@ -755,6 +755,73 @@ describe("Progressive Enhancement", () => {
 			cy.get("nav").should("contain.text", "About");
 		});
 	});
+
+	it("Should swap new anchors that were swapped unto the page", () => {
+		prepareHead().then((head) => {
+			cy.intercept("GET", "/", {
+				statusCode: 200,
+				body: `
+				<!DOCTYPE html>
+				<html>
+					${head}
+					<body>
+						<div>
+							<nav>
+								<small>Navigation</small>
+								<a id='about-link' data-htswap="#content" href='/about'>About</a>
+							</nav>
+							<main id='content'>
+								<h1>Home</h1>
+							</main>
+						</div>
+					</body>
+				</html>
+				`,
+			});
+			cy.intercept("GET", "/about", {
+				statusCode: 200,
+				body: `
+					<main id='content'>
+						<h1>About</h1>
+						<a id='contact-link' data-htswap="#content" href='/contact'>Contact</a>
+					</main>
+			`,
+			}).as("getAbout");
+			cy.intercept("GET", "/contact", {
+				statusCode: 200,
+				body: `
+					<main id='content'>
+						<h1>Contact</h1>
+					</main>
+			`,
+			}).as("getContact");
+
+			cy.visit("/");
+
+			let initialMarker: number;
+			cy.window().then((win) => {
+				initialMarker = (win as typeof win & { __marker: number }).__marker;
+				expect(initialMarker).to.be.not.undefined;
+			});
+
+			cy.get("#about-link").click();
+			cy.wait("@getAbout");
+
+			cy.window().should((win) => {
+				expect((win as typeof win & { __marker: number }).__marker).to.equal(
+					initialMarker,
+				);
+			});
+			cy.get("#content").should("contain.text", "About");
+			cy.get("nav").should("contain.text", "Navigation");
+
+			cy.get("#contact-link").click();
+			cy.wait("@getContact");
+
+			cy.get("#content").should("contain.text", "Contact");
+			cy.get("nav").should("contain.text", "Navigation");
+		});
+	});
 });
 
 describe("Graceful Degradation", () => {
