@@ -223,8 +223,8 @@ export async function bind() {
 				e.preventDefault();
 				const submitBtn = el.querySelector(
 					"[type='submit']",
-				) as HTMLButtonElement;
-				submitBtn.disabled = true;
+				) as HTMLButtonElement | null;
+				if (submitBtn) submitBtn.disabled = true;
 
 				const data = new FormData(el);
 				const method = el.method.toUpperCase();
@@ -243,7 +243,7 @@ export async function bind() {
 					method === "POST" ? data : undefined,
 				);
 
-				submitBtn.disabled = false;
+				if (submitBtn) submitBtn.disabled = false;
 			};
 			continue;
 		}
