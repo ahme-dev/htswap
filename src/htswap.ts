@@ -245,7 +245,7 @@ export async function bind() {
 
 				submitBtn.disabled = false;
 			};
-			return;
+			continue;
 		}
 
 		// bind anchors

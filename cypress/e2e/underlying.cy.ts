@@ -714,6 +714,9 @@ describe("Progressive Enhancement", () => {
 					${head}
 					<body>
 						<div>
+							<form id='broken-form' method='POST' action='/broken' data-htswap="#nonexistent">
+								<button type='submit'>Submit</button>
+							</form>
 							<nav data-htswap="#content">
 								<a id='about-link' href='/about'>About</a>
 							</nav>
@@ -741,6 +744,9 @@ describe("Progressive Enhancement", () => {
 				initialMarker = (win as typeof win & { __marker: number }).__marker;
 				expect(initialMarker).to.be.not.undefined;
 			});
+
+			cy.get("#broken-form").should("have.attr", "data-htlocked", "true");
+			cy.get("#about-link").should("have.attr", "data-htlocked", "true"); // make sure elements after broken form are still locked and processed
 
 			cy.get("#about-link").click();
 			cy.wait("@getAbout");
